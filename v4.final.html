@@ -64,7 +64,7 @@
   </table>
 
   <div id='instructions'>
-    <p>Use the <b>arrow keys</b> to drive the car.</p>
+    <p>Use the <b>arrow keys</b> to drive the car and the <b>spacebar</b> for a turbo boost.</p>
   </div>
 
   <div id="racer">
@@ -126,6 +126,8 @@
     var speed          = 0;                       // current speed
     var maxSpeed       = segmentLength/step;      // top speed (ensure we can't move more than 1 segment in a single frame to make collision detection easier)
     var accel          =  maxSpeed/5;             // acceleration rate - tuned until it 'felt' right
+    var boostMaxSpeed  =  maxSpeed * 1.5;         // top speed during turbo boost
+    var boostAccel     =  accel * 2;              // acceleration rate during turbo boost
     var breaking       = -maxSpeed;               // deceleration rate when braking
     var decel          = -maxSpeed/5;             // 'natural' deceleration rate when neither accelerating, nor braking
     var offRoadDecel   = -maxSpeed/2;             // off road deceleration is somewhere in between
@@ -138,6 +140,7 @@
     var keyRight       = false;
     var keyFaster      = false;
     var keySlower      = false;
+    var keyBoost       = false;
 
     var hud = {
       speed:            { value: null, dom: Dom.get('speed_value')            },
@@ -170,7 +173,9 @@
 
       playerX = playerX - (dx * speedPercent * playerSegment.curve * centrifugal);
 
-      if (keyFaster)
+      if (keyBoost)
+        speed = Util.accelerate(speed, boostAccel, dt);
+      else if (keyFaster)
         speed = Util.accelerate(speed, accel, dt);
       else if (keySlower)
         speed = Util.accelerate(speed, breaking, dt);
@@ -207,7 +212,7 @@
       }
 
       playerX = Util.limit(playerX, -3, 3);     // dont ever let it go too far out of bounds
-      speed   = Util.limit(speed, 0, maxSpeed); // or exceed maxSpeed
+      speed   = Util.limit(speed, 0, keyBoost ? boostMaxSpeed : maxSpeed); // or exceed max speed
 
       skyOffset  = Util.increase(skyOffset,  skySpeed  * playerSegment.curve * (position-startPosition)/segmentLength, 1);
       hillOffset = Util.increase(hillOffset, hillSpeed * playerSegment.curve * (position-startPosition)/segmentLength, 1);
@@ -613,10 +618,12 @@
         { keys: [KEY.RIGHT, KEY.D], mode: 'down', action: function() { keyRight  = true;  } },
         { keys: [KEY.UP,    KEY.W], mode: 'down', action: function() { keyFaster = true;  } },
         { keys: [KEY.DOWN,  KEY.S], mode: 'down', action: function() { keySlower = true;  } },
+        { keys: [KEY.SPACE],         mode: 'down', action: function() { keyBoost  = true;  } },
         { keys: [KEY.LEFT,  KEY.A], mode: 'up',   action: function() { keyLeft   = false; } },
         { keys: [KEY.RIGHT, KEY.D], mode: 'up',   action: function() { keyRight  = false; } },
         { keys: [KEY.UP,    KEY.W], mode: 'up',   action: function() { keyFaster = false; } },
-        { keys: [KEY.DOWN,  KEY.S], mode: 'up',   action: function() { keySlower = false; } }
+        { keys: [KEY.DOWN,  KEY.S], mode: 'up',   action: function() { keySlower = false; } },
+        { keys: [KEY.SPACE],         mode: 'up',   action: function() { keyBoost  = false; } }
       ],
       ready: function(images) {
         background = images[0];

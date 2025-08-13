@@ -3,6 +3,8 @@ Javascript Pseudo 3D Racer
 
 An Outrun-style pseudo-3d racing game in HTML5 and Javascript
 
+This fork adds a turbo boost feature—press the spacebar to surge past traffic.
+
  * [play the game](https://jakesgordon.com/games/racer/)
  * view the [source](https://github.com/jakesgordon/javascript-racer)
  * read about [how it works](https://jakesgordon.com/writing/javascript-racer/)
