@@ -290,10 +290,10 @@ import { setupTweakUI, refreshTweakUI } from "./tweak-ui.mjs";
       cameraDepth            = 1 / Math.tan((fieldOfView/2) * Math.PI/180);
       playerZ                = (cameraHeight * cameraDepth);
       resolution             = height/480;
-      refreshTweakUI();
+      refreshTweakUI({ lanes, roadWidth, cameraHeight, drawDistance, fieldOfView, fogDensity });
 
       if ((segments.length==0) || (options.segmentLength) || (options.rumbleLength))
         resetRoad(); // only rebuild road when necessary
     }
 
-setupTweakUI();
+setupTweakUI(reset);
