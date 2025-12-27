@@ -1,0 +1,3 @@
+## 2025-05-20 - Semantic Controls and Focus Styles
+**Learning:** Replacing non-semantic `<span>` controls with `<button>` requires resetting default user agent styles (border, padding, background) to maintain the original visual design. Crucially, explicitly adding `:focus-visible` styles is necessary because `outline: none` is often used to hide the default browser focus ring, which hurts accessibility.
+**Action:** When converting interactive elements to semantic HTML, always pair CSS resets with high-contrast, custom focus indicators (e.g., `outline: 2px solid white`) to ensure keyboard users can navigate the interface.
