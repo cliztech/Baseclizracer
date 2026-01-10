@@ -169,8 +169,14 @@ var Game = {  // a modified version of the game loop from my previous boulderdas
         }
       }
     };
-    Dom.on(document, 'keydown', function(ev) { onkey(ev.keyCode, 'down'); } );
-    Dom.on(document, 'keyup',   function(ev) { onkey(ev.keyCode, 'up');   } );
+    Dom.on(document, 'keydown', function(ev) {
+      if (['INPUT', 'SELECT', 'TEXTAREA'].includes(ev.target.tagName)) return;
+      onkey(ev.keyCode, 'down');
+    });
+    Dom.on(document, 'keyup',   function(ev) {
+      if (['INPUT', 'SELECT', 'TEXTAREA'].includes(ev.target.tagName)) return;
+      onkey(ev.keyCode, 'up');
+    });
   },
 
   //---------------------------------------------------------------------------
