@@ -52,3 +52,11 @@ kbd {
 #hud #fast_lap_time    { display: block; width: 12em;  margin: 0 auto; text-align: center; transition-property: background-color; transition-duration: 2s; -webkit-transition-property: background-color; -webkit-transition-duration: 2s; }
 #hud .value            { color: black; font-weight: bold; }
 #hud .fastest          { background-color: rgba(255,215,0,0.5); }
+
+/* Navigation active state */
+a[aria-current="page"] {
+  font-weight: bold;
+  color: black;
+  text-decoration: none;
+  cursor: default;
+}
