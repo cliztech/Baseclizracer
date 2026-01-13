@@ -15,3 +15,7 @@
 ## 2025-01-25 - Active Navigation State
 **Learning:** Adding `aria-current="page"` to navigation links is a low-effort, high-impact a11y win. It programmatically communicates position to screen readers and provides a semantic hook for styling the "active" state without relying on class names.
 **Action:** Use `[aria-current="page"]` selectors for styling active navigation items instead of `.active` classes.
+
+## 2025-01-26 - Real-time Feedback on Range Inputs
+**Learning:** Users engaging with range sliders expect immediate visual feedback. Using the `input` event for state updates while maintaining `change` for commit/cleanup (like blurring to return focus to the game) provides a much more responsive "tweak" experience without sacrificing keyboard safety.
+**Action:** Bind `input` events for live value updates on sliders, and use `change` events for final commits or focus management.
