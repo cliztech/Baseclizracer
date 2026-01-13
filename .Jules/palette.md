@@ -11,3 +11,7 @@
 ## 2025-01-24 - Consistent Focus Indicators
 **Learning:** Default browser focus rings are inconsistent and often subtle. Applying a high-contrast, design-system-aligned `focus-visible` style (e.g., `outline: 2px solid black`) to all interactive elements improves accessibility and visual consistency.
 **Action:** Use the shared `:focus-visible` rule in `common.css` for all interactive elements.
+
+## 2025-01-25 - Active Navigation State
+**Learning:** Adding `aria-current="page"` to navigation links is a low-effort, high-impact a11y win. It programmatically communicates position to screen readers and provides a semantic hook for styling the "active" state without relying on class names.
+**Action:** Use `[aria-current="page"]` selectors for styling active navigation items instead of `.active` classes.
