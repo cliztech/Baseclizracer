@@ -14,11 +14,23 @@ export function setupTweakUI(callbacks) {
   });
 
   Dom.on('lanes',          'change', function(ev) { Dom.blur(ev); reset({ lanes:         ev.target.options[ev.target.selectedIndex].value }); });
-  Dom.on('roadWidth',      'change', function(ev) { Dom.blur(ev); reset({ roadWidth:     Util.limit(Util.toInt(ev.target.value), Util.toInt(ev.target.getAttribute('min')), Util.toInt(ev.target.getAttribute('max'))) }); });
-  Dom.on('cameraHeight',   'change', function(ev) { Dom.blur(ev); reset({ cameraHeight:  Util.limit(Util.toInt(ev.target.value), Util.toInt(ev.target.getAttribute('min')), Util.toInt(ev.target.getAttribute('max'))) }); });
-  Dom.on('drawDistance',   'change', function(ev) { Dom.blur(ev); reset({ drawDistance:  Util.limit(Util.toInt(ev.target.value), Util.toInt(ev.target.getAttribute('min')), Util.toInt(ev.target.getAttribute('max'))) }); });
-  Dom.on('fieldOfView',    'change', function(ev) { Dom.blur(ev); reset({ fieldOfView:   Util.limit(Util.toInt(ev.target.value), Util.toInt(ev.target.getAttribute('min')), Util.toInt(ev.target.getAttribute('max'))) }); });
-  Dom.on('fogDensity',     'change', function(ev) { Dom.blur(ev); reset({ fogDensity:    Util.limit(Util.toInt(ev.target.value), Util.toInt(ev.target.getAttribute('min')), Util.toInt(ev.target.getAttribute('max'))) }); });
+
+  var bindRange = function(id, prop) {
+    var update = function(ev) {
+      var val = Util.limit(Util.toInt(ev.target.value), Util.toInt(ev.target.getAttribute('min')), Util.toInt(ev.target.getAttribute('max')));
+      var obj = {};
+      obj[prop] = val;
+      reset(obj);
+    };
+    Dom.on(id, 'input', update);
+    Dom.on(id, 'change', function(ev) { update(ev); Dom.blur(ev); });
+  };
+
+  bindRange('roadWidth',    'roadWidth');
+  bindRange('cameraHeight', 'cameraHeight');
+  bindRange('drawDistance', 'drawDistance');
+  bindRange('fieldOfView',  'fieldOfView');
+  bindRange('fogDensity',   'fogDensity');
 
   // Do not call refreshTweakUI here, let the caller handle it or pass state
   // Or better, if caller passes state, we can call it.
