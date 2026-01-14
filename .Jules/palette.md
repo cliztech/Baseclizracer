@@ -15,3 +15,7 @@
 ## 2025-01-25 - Active Navigation State
 **Learning:** Adding `aria-current="page"` to navigation links is a low-effort, high-impact a11y win. It programmatically communicates position to screen readers and provides a semantic hook for styling the "active" state without relying on class names.
 **Action:** Use `[aria-current="page"]` selectors for styling active navigation items instead of `.active` classes.
+
+## 2025-01-26 - Live Preview for Config Sliders
+**Learning:** For game configuration sliders, immediate feedback via `input` events creates a much more responsive feel than `change` events (on release). However, this requires verifying that the update function is performant enough to run per-frame.
+**Action:** Use `input` events for lightweight visual tweaks (FOV, camera height) and `change` events for expensive rebuilds (track geometry).
