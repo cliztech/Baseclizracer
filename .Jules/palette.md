@@ -19,3 +19,7 @@
 ## 2025-01-26 - Live Preview for Config Sliders
 **Learning:** For game configuration sliders, immediate feedback via `input` events creates a much more responsive feel than `change` events (on release). However, this requires verifying that the update function is performant enough to run per-frame.
 **Action:** Use `input` events for lightweight visual tweaks (FOV, camera height) and `change` events for expensive rebuilds (track geometry).
+
+## 2025-01-27 - Skip to Game Link
+**Learning:** In keyboard-controlled games where form inputs block game controls (to prevent conflicts), a "Skip to Content" link is essential. It allows users to bypass the form gauntlet and immediately activate the game context. The target container must have `tabindex="-1"` to accept focus programmatically.
+**Action:** Add `.skip-link` and ensure game containers are focusable with descriptive ARIA labels.
