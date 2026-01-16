@@ -9,6 +9,8 @@
 
 <body> 
 
+  <a class="skip-link" href="#racer">Skip to game</a>
+
   <table id="controls">
     <tr>
       <td colspan="2">
@@ -67,7 +69,7 @@
     <p>Use <kbd>↑</kbd> <kbd>↓</kbd> <kbd>←</kbd> <kbd>→</kbd> or <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> to drive.</p>
   </div>
 
-  <div id="racer">
+  <div id="racer" tabindex="-1" aria-label="Game screen">
     <div id="hud">
       <span id="speed"            class="hud"><span id="speed_value" class="value">0</span> mph</span>
       <span id="current_lap_time" class="hud">Time: <span id="current_lap_time_value" class="value">0.0</span></span> 
