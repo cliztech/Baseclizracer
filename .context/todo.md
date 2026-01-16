@@ -1,0 +1,8 @@
+- [x] Create `.context/` directory
+- [x] Write `gemini.md`
+- [x] Write `plan.md`
+- [x] Write `skills.md`
+- [x] Write `lsp.md`
+- [x] Write `todo.md`
+- [x] Write `workthrough.md`
+- [x] Write `lessons.md`
