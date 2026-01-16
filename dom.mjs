@@ -5,6 +5,7 @@ export const Dom = {
   on:   function(ele, type, fn, capture) { Dom.get(ele).addEventListener(type, fn, capture);    },
   un:   function(ele, type, fn, capture) { Dom.get(ele).removeEventListener(type, fn, capture); },
   show: function(ele, type)              { Dom.get(ele).style.display = (type || 'block');      },
+  hide: function(ele)                    { Dom.get(ele).style.display = 'none';                 },
   blur: function(ev)                     { ev.target.blur();                                    },
 
   addClassName:    function(ele, name)     { Dom.toggleClassName(ele, name, true);  },

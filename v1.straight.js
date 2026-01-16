@@ -167,6 +167,7 @@
         background = images[0];
         sprites    = images[1];
         reset();
+        Dom.hide('loading');
       }
     });
 

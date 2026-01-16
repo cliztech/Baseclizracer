@@ -543,6 +543,7 @@ const net = createSocket("ws://localhost:8080", data => { console.log("net", dat
         reset();
         Dom.storage.fast_lap_time = Dom.storage.fast_lap_time || 180;
         updateHud('fast_lap_time', formatTime(Util.toFloat(Dom.storage.fast_lap_time)));
+        Dom.hide('loading');
       }
     });
 
