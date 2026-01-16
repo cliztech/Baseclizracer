@@ -238,6 +238,7 @@ import { setupTweakUI, refreshTweakUI } from "./tweak-ui.mjs";
         background = images[0];
         sprites    = images[1];
         reset();
+        Dom.hide('loading');
       }
     });
 

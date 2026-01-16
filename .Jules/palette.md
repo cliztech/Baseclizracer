@@ -23,3 +23,7 @@
 ## 2025-01-27 - Skip to Game Link
 **Learning:** In keyboard-controlled games where form inputs block game controls (to prevent conflicts), a "Skip to Content" link is essential. It allows users to bypass the form gauntlet and immediately activate the game context. The target container must have `tabindex="-1"` to accept focus programmatically.
 **Action:** Add `.skip-link` and ensure game containers are focusable with descriptive ARIA labels.
+
+## 2025-01-28 - Canvas Loading States
+**Learning:** Text based "Loading..." indicators placed directly in the HTML can be obscured by the canvas element when it initializes, yet remain in the accessibility tree, confusing screen readers. A dedicated, styled overlay that is programmatically hidden ensures both visibility during load and a clean state after.
+**Action:** Wrap loading text in a semantic container (`#loading`) and explicitely hide it (`display: none`) when the game loop starts.
