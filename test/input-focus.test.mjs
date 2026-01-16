@@ -1,37 +1,23 @@
-
-/* global URL */
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
-import vm from 'node:vm';
 
-const code = readFileSync(new URL('../common.js', import.meta.url), 'utf8');
+// Mock globals before importing Game (which imports Dom)
+global.HTMLElement = class {};
+global.document = {
+  getElementById: () => ({ addEventListener: () => {} }),
+  addEventListener: () => {},
+  removeEventListener: () => {},
+};
+global.window = {}; // For Util
+
+import { Game } from '../game.mjs';
+import { KEY } from '../constants.mjs';
 
 test('Game.setKeyListener ignores input fields', () => {
     let listeners = {};
-    const documentMock = {
-        getElementById: () => ({ addEventListener: () => {} }),
-        addEventListener: (type, fn) => { listeners[type] = fn; },
-        removeEventListener: () => {},
-    };
-    const windowMock = {
-        localStorage: {},
-        requestAnimationFrame: () => {},
-        setTimeout: () => {},
-    };
 
-    const context = {
-        document: documentMock,
-        window: windowMock,
-        HTMLElement: class {},
-        Stats: class { constructor() { this.domElement = {}; } },
-        setInterval: () => {},
-    };
-
-    vm.createContext(context);
-    vm.runInContext(code, context);
-
-    const { Game, KEY } = context;
+    // Update global.document behavior for this test to capture listeners
+    global.document.addEventListener = (type, fn) => { listeners[type] = fn; };
 
     let actionCalled = false;
     const keys = [
@@ -48,7 +34,7 @@ test('Game.setKeyListener ignores input fields', () => {
     });
     assert.equal(actionCalled, true, 'Action should be called when target is BODY');
 
-    // Test 2: Keydown on INPUT should NOT trigger action (This is what we want to implement)
+    // Test 2: Keydown on INPUT should NOT trigger action
     actionCalled = false;
     listeners['keydown']({
         keyCode: KEY.UP,
