@@ -1,5 +1,7 @@
-/* global Dom, Util */
-export function setupTweakUI(callbacks) {
+import { Dom as defaultDom } from './dom.mjs';
+import { Util as defaultUtil } from './util.mjs';
+
+export function setupTweakUI(callbacks, { Dom = defaultDom, Util = defaultUtil } = {}) {
   var reset = callbacks.reset;
   Dom.on('resolution', 'change', function(ev) {
     var w, h;
@@ -24,12 +26,9 @@ export function setupTweakUI(callbacks) {
   Dom.on('fieldOfView',    'change', function(ev) { Dom.blur(ev); });
   Dom.on('fogDensity',     'input',  function(ev) { reset({ fogDensity:    Util.limit(Util.toInt(ev.target.value), Util.toInt(ev.target.getAttribute('min')), Util.toInt(ev.target.getAttribute('max'))) }); });
   Dom.on('fogDensity',     'change', function(ev) { Dom.blur(ev); });
-
-  // Do not call refreshTweakUI here, let the caller handle it or pass state
-  // Or better, if caller passes state, we can call it.
 }
 
-export function refreshTweakUI(state) {
+export function refreshTweakUI(state, { Dom = defaultDom } = {}) {
   var lanes        = state.lanes;
   var roadWidth    = state.roadWidth;
   var cameraHeight = state.cameraHeight;

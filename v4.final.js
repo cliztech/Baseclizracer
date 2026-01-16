@@ -1,6 +1,11 @@
-/* eslint-disable */
 import { setupTweakUI, refreshTweakUI } from "./tweak-ui.mjs";
 import { createSocket } from "./net.mjs";
+import { Dom } from './dom.mjs';
+import { Util } from './util.mjs';
+import { Game } from './game.mjs';
+import { Render } from './render.mjs';
+import { KEY, COLORS, BACKGROUND, SPRITES } from './constants.mjs';
+
     var fps            = 60;                      // how many 'update' frames per second
     var step           = 1/fps;                   // how long is each frame (in seconds)
     var width          = 1024;                    // logical canvas width
@@ -155,7 +160,7 @@ const net = createSocket("ws://localhost:8080", data => { console.log("net", dat
     //-------------------------------------------------------------------------
 
     function updateCars(dt, playerSegment, playerW) {
-      var n, car, oldSegment, newSegment;
+      var n, car, oldSegment, newSegment, index;
       for(n = 0 ; n < cars.length ; n++) {
         car         = cars[n];
         oldSegment  = findSegment(car.z);
@@ -503,7 +508,7 @@ const net = createSocket("ws://localhost:8080", data => { console.log("net", dat
     function resetCars() {
       cars = [];
       var n, car, segment, offset, z, sprite, speed;
-      for (var n = 0 ; n < totalCars ; n++) {
+      for (n = 0 ; n < totalCars ; n++) {
         offset = Math.random() * Util.randomChoice([-0.8, 0.8]);
         z      = Math.floor(Math.random() * segments.length) * segmentLength;
         sprite = Util.randomChoice(SPRITES.CARS);

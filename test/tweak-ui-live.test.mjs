@@ -1,25 +1,22 @@
-/* global global */
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { setupTweakUI } from '../tweak-ui.mjs';
 
-// Mock Globals required by tweak-ui.mjs
-global.Util = {
-  limit: (v) => v,
-  toInt: (v) => parseInt(v, 10)
-};
-
 test('setupTweakUI attaches input listeners for live updates', () => {
   const listeners = [];
-  global.Dom = {
+  const DomMock = {
     on: (id, event, fn) => {
       listeners.push({ id, event, fn });
     },
     blur: () => {},
     get: () => ({ value: 0, options: [] })
   };
+  const UtilMock = {
+    limit: (v) => v,
+    toInt: (v) => parseInt(v, 10)
+  };
 
-  setupTweakUI({ reset: () => {} });
+  setupTweakUI({ reset: () => {} }, { Dom: DomMock, Util: UtilMock });
 
   const rangeInputs = ['roadWidth', 'cameraHeight', 'drawDistance', 'fieldOfView', 'fogDensity'];
 

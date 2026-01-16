@@ -1,4 +1,3 @@
-/* eslint-disable */
 import { setupTweakUI, refreshTweakUI } from "./tweak-ui.mjs";
 
     var fps           = 60;                      // how many 'update' frames per second
