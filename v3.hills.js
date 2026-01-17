@@ -1,3 +1,8 @@
+import { Dom } from './dom.mjs';
+import { Util } from './util.mjs';
+import { Game } from './game.mjs';
+import { Render } from './render.mjs';
+import { KEY, COLORS, BACKGROUND } from './constants.mjs';
 import { setupTweakUI, refreshTweakUI } from "./tweak-ui.mjs";
 
     var fps           = 60;                      // how many 'update' frames per second
@@ -206,14 +211,6 @@ import { setupTweakUI, refreshTweakUI } from "./tweak-ui.mjs";
       addRoad(num, num, num,  0,  0);
       addRoad(num, num, num,  0,  height/2);
       addRoad(num, num, num,  0,  0);
-    }
-
-    function addSCurves() {
-      addRoad(ROAD.LENGTH.MEDIUM, ROAD.LENGTH.MEDIUM, ROAD.LENGTH.MEDIUM,  -ROAD.CURVE.EASY,    ROAD.HILL.NONE);
-      addRoad(ROAD.LENGTH.MEDIUM, ROAD.LENGTH.MEDIUM, ROAD.LENGTH.MEDIUM,   ROAD.CURVE.MEDIUM,  ROAD.HILL.MEDIUM);
-      addRoad(ROAD.LENGTH.MEDIUM, ROAD.LENGTH.MEDIUM, ROAD.LENGTH.MEDIUM,   ROAD.CURVE.EASY,   -ROAD.HILL.LOW);
-      addRoad(ROAD.LENGTH.MEDIUM, ROAD.LENGTH.MEDIUM, ROAD.LENGTH.MEDIUM,  -ROAD.CURVE.EASY,    ROAD.HILL.MEDIUM);
-      addRoad(ROAD.LENGTH.MEDIUM, ROAD.LENGTH.MEDIUM, ROAD.LENGTH.MEDIUM,  -ROAD.CURVE.MEDIUM, -ROAD.HILL.MEDIUM);
     }
 
     function addDownhillToEnd(num) {
