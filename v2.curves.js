@@ -1,3 +1,8 @@
+import { Dom } from './dom.mjs';
+import { Util } from './util.mjs';
+import { Game } from './game.mjs';
+import { Render } from './render.mjs';
+import { KEY, COLORS, BACKGROUND } from './constants.mjs';
 import { setupTweakUI, refreshTweakUI } from "./tweak-ui.mjs";
 
     var fps           = 60;                      // how many 'update' frames per second

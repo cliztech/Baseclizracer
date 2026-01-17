@@ -18,15 +18,7 @@ module.exports = [
         console: 'readonly',
         global: 'readonly',
         require: 'readonly',
-        process: 'readonly',
-        Dom: 'readonly',
-        Util: 'readonly',
-        Game: 'readonly',
-        Render: 'readonly',
-        KEY: 'readonly',
-        COLORS: 'readonly',
-        BACKGROUND: 'readonly',
-        SPRITES: 'readonly'
+        process: 'readonly'
       }
     },
     rules: {
