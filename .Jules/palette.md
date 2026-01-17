@@ -27,3 +27,7 @@
 ## 2025-01-28 - Canvas Loading States
 **Learning:** Text based "Loading..." indicators placed directly in the HTML can be obscured by the canvas element when it initializes, yet remain in the accessibility tree, confusing screen readers. A dedicated, styled overlay that is programmatically hidden ensures both visibility during load and a clean state after.
 **Action:** Wrap loading text in a semantic container (`#loading`) and explicitely hide it (`display: none`) when the game loop starts.
+
+## 2026-01-17 - Double-Bound Controls (Click + Key)
+**Learning:** Providing both a visible UI control (button) and a keyboard shortcut (hotkey) for critical game actions (like "Restart") caters to both novice users (mouse discoverability) and power users (keyboard efficiency).
+**Action:** When adding game controls, pair a `<button>` with a `KEY` listener and document the shortcut in the UI (e.g., "Press R to restart").

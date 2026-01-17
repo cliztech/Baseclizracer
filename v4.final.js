@@ -535,7 +535,8 @@ const net = createSocket("ws://localhost:8080", data => { console.log("net", dat
         { keys: [KEY.LEFT,  KEY.A], mode: 'up',   action: function() { keyLeft   = false; } },
         { keys: [KEY.RIGHT, KEY.D], mode: 'up',   action: function() { keyRight  = false; } },
         { keys: [KEY.UP,    KEY.W], mode: 'up',   action: function() { keyFaster = false; } },
-        { keys: [KEY.DOWN,  KEY.S], mode: 'up',   action: function() { keySlower = false; } }
+        { keys: [KEY.DOWN,  KEY.S], mode: 'up',   action: function() { keySlower = false; } },
+        { keys: [KEY.R],            mode: 'down', action: function() { reset();           } }
       ],
       ready: function(images) {
         background = images[0];
@@ -546,6 +547,8 @@ const net = createSocket("ws://localhost:8080", data => { console.log("net", dat
         Dom.hide('loading');
       }
     });
+
+    Dom.on('restart', 'click', function() { reset(); });
 
     function reset(options) {
       options       = options || {};
