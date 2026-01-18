@@ -167,7 +167,7 @@ const net = createSocket("ws://localhost:8080", data => { console.log("net", dat
 
       updateHud('speed',            5 * Math.round(speed/500));
       updateHud('current_lap_time', formatTime(currentLapTime));
-      net.send({ x: playerX, z: position, speed });
+      net.send('UPDATE', { x: playerX, z: position, speed });
     }
 
     //-------------------------------------------------------------------------
