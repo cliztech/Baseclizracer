@@ -31,3 +31,7 @@
 ## 2026-01-17 - Double-Bound Controls (Click + Key)
 **Learning:** Providing both a visible UI control (button) and a keyboard shortcut (hotkey) for critical game actions (like "Restart") caters to both novice users (mouse discoverability) and power users (keyboard efficiency).
 **Action:** When adding game controls, pair a `<button>` with a `KEY` listener and document the shortcut in the UI (e.g., "Press R to restart").
+
+## 2026-01-18 - Reset for Playground UIs
+**Learning:** In dense configuration UIs (like the game tweaks), users feel safer exploring extremes when they have a single-click "panic button" to restore known-good state.
+**Action:** Always pair complex "tweak" controls with a global reset action.
