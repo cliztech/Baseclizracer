@@ -32,6 +32,7 @@ import { KEY, COLORS, BACKGROUND, SPRITES } from './constants.mjs';
     var treeOffset     = 0;                       // current tree scroll offset
     var segments       = [];                      // array of road segments
     var cars           = [];                      // array of cars on the road
+    var remotePlayers  = {};                      // map of remote players
     var stats          = Game.stats('fps');       // mr.doobs FPS counter
     var canvas         = Dom.get('canvas');       // our canvas...
     var ctx            = canvas.getContext('2d'); // ...and its drawing context
@@ -74,7 +75,36 @@ import { KEY, COLORS, BACKGROUND, SPRITES } from './constants.mjs';
       fast_lap_time:    { value: null, dom: Dom.get('fast_lap_time_value')    }
     }
 
-const net = createSocket("ws://localhost:8080", data => { console.log("net", data); });
+    const net = createSocket("ws://localhost:8080", data => {
+      if (data.type === 'WELCOME') {
+        data.players.forEach(p => addRemotePlayer(p.id, p));
+      } else if (data.type === 'PLAYER_JOIN') {
+        addRemotePlayer(data.id, data);
+      } else if (data.type === 'PLAYER_LEAVE') {
+        delete remotePlayers[data.id];
+      } else if (data.type === 'UPDATE') {
+        if (remotePlayers[data.id]) {
+          const p = remotePlayers[data.id];
+          p.x = data.x;
+          p.z = data.z;
+          p.speed = data.speed;
+        }
+      }
+    });
+
+    // Send initial join to get a random sprite
+    net.send('JOIN', { roomId: 'default', spriteIndex: Util.randomInt(0, SPRITES.CARS.length-1) });
+
+    function addRemotePlayer(id, data) {
+      remotePlayers[id] = {
+        x: data.x || 0,
+        z: data.z || 0,
+        speed: data.speed || 0,
+        sprite: SPRITES.CARS[(data.spriteIndex || 0) % SPRITES.CARS.length],
+        offset: 0,
+        percent: 0
+      };
+    }
 
     //=========================================================================
     // UPDATE THE GAME WORLD
@@ -310,6 +340,19 @@ const net = createSocket("ws://localhost:8080", data => { console.log("net", dat
 
       for(n = (drawDistance-1) ; n > 0 ; n--) {
         segment = segments[(baseSegment.index + n) % segments.length];
+
+        // Render remote players
+        for (const id in remotePlayers) {
+          var player = remotePlayers[id];
+          var rSegment = findSegment(player.z);
+          if (rSegment === segment) {
+             var rPercent = Util.percentRemaining(player.z, segmentLength);
+             var rScale   = Util.interpolate(segment.p1.screen.scale, segment.p2.screen.scale, rPercent);
+             var rX       = Util.interpolate(segment.p1.screen.x,     segment.p2.screen.x,     rPercent) + (rScale * player.x * roadWidth * width/2);
+             var rY       = Util.interpolate(segment.p1.screen.y,     segment.p2.screen.y,     rPercent);
+             Render.sprite(ctx, width, height, resolution, roadWidth, sprites, player.sprite, rScale, rX, rY, -0.5, -1, segment.clip);
+          }
+        }
 
         for(i = 0 ; i < segment.cars.length ; i++) {
           car         = segment.cars[i];

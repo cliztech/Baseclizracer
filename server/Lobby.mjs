@@ -47,21 +47,30 @@ export class Lobby {
       this.clients.delete(ws);
     });
 
-    // Auto-join default room for now (simplifies migration)
-    this.rooms.get('default').add(client);
-    client.send('WELCOME', { id: client.id, roomId: 'default' });
+    // Auto-join default room for backward compatibility
+    this.joinRoom(client, 'default', 0);
   }
 
   handleMessage(client, message) {
-    // Protocol: { type, ...payload }
-    // For now, we just broadcast everything to the room
-    if (client.room) {
-      // If it's a specific action, handle it. Otherwise, broadcast.
-      if (message.type === 'JOIN') {
-         // Handle manual join if we want multiple rooms later
-      } else {
-         client.room.broadcast(client, message.type, message);
-      }
+    if (message.type === 'JOIN') {
+      this.joinRoom(client, message.roomId, message.spriteIndex);
+    } else if (client.room) {
+      client.room.handleMessage(client, message);
     }
+  }
+
+  joinRoom(client, roomId, spriteIndex) {
+    if (client.room) {
+      client.room.remove(client);
+    }
+
+    // Create room if it doesn't exist (auto-create)
+    let room = this.rooms.get(roomId);
+    if (!room) {
+      room = this.createRoom(roomId);
+    }
+
+    client.state.spriteIndex = spriteIndex || 0;
+    room.add(client);
   }
 }
