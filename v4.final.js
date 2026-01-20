@@ -62,6 +62,7 @@ import { KEY, COLORS, BACKGROUND, SPRITES } from './constants.mjs';
     var totalCars      = 200;                     // total number of cars on the road
     var currentLapTime = 0;                       // current lap time
     var lastLapTime    = null;                    // last lap time
+    var timeSinceLastUpdate = 0;                  // time since last network update
 
     var keyLeft        = false;
     var keyRight       = false;
@@ -85,9 +86,9 @@ import { KEY, COLORS, BACKGROUND, SPRITES } from './constants.mjs';
       } else if (data.type === 'UPDATE') {
         if (remotePlayers[data.id]) {
           const p = remotePlayers[data.id];
-          p.x = data.x;
-          p.z = data.z;
-          p.speed = data.speed;
+          p.target.x = data.x;
+          p.target.z = data.z;
+          p.target.speed = data.speed;
         }
       }
     });
@@ -100,10 +101,32 @@ import { KEY, COLORS, BACKGROUND, SPRITES } from './constants.mjs';
         x: data.x || 0,
         z: data.z || 0,
         speed: data.speed || 0,
+        target: {
+          x: data.x || 0,
+          z: data.z || 0,
+          speed: data.speed || 0
+        },
         sprite: SPRITES.CARS[(data.spriteIndex || 0) % SPRITES.CARS.length],
         offset: 0,
         percent: 0
       };
+    }
+
+    function updateRemotePlayers(dt) {
+      const smoothing = 10 * dt; // Converge in ~100ms
+      for (const id in remotePlayers) {
+        const p = remotePlayers[id];
+        p.x = Util.interpolate(p.x, p.target.x, smoothing);
+
+        // Handle Z wrapping (Finish Line) to prevent driving backwards
+        if (trackLength && Math.abs(p.target.z - p.z) > trackLength / 2) {
+          p.z = p.target.z;
+        } else {
+          p.z = Util.interpolate(p.z, p.target.z, smoothing);
+        }
+
+        p.speed = Util.interpolate(p.speed, p.target.speed, smoothing);
+      }
     }
 
     //=========================================================================
@@ -120,6 +143,7 @@ import { KEY, COLORS, BACKGROUND, SPRITES } from './constants.mjs';
       var startPosition = position;
 
       updateCars(dt, playerSegment, playerW);
+      updateRemotePlayers(dt);
 
       position = Util.increase(position, dt * speed, trackLength);
 
@@ -197,7 +221,13 @@ import { KEY, COLORS, BACKGROUND, SPRITES } from './constants.mjs';
 
       updateHud('speed',            5 * Math.round(speed/500));
       updateHud('current_lap_time', formatTime(currentLapTime));
-      net.send('UPDATE', { x: playerX, z: position, speed });
+
+      // Network Throttling: Send updates at ~10Hz to save bandwidth
+      timeSinceLastUpdate += dt;
+      if (timeSinceLastUpdate > 0.1) {
+        net.send('UPDATE', { x: playerX, z: position, speed });
+        timeSinceLastUpdate = 0;
+      }
     }
 
     //-------------------------------------------------------------------------
