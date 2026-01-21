@@ -30,7 +30,8 @@ test('Game.setKeyListener ignores input fields', () => {
     actionCalled = false;
     listeners['keydown']({
         keyCode: KEY.UP,
-        target: { tagName: 'BODY' }
+        target: { tagName: 'BODY' },
+        preventDefault: () => {} // Added mock for preventDefault
     });
     assert.equal(actionCalled, true, 'Action should be called when target is BODY');
 
@@ -38,7 +39,8 @@ test('Game.setKeyListener ignores input fields', () => {
     actionCalled = false;
     listeners['keydown']({
         keyCode: KEY.UP,
-        target: { tagName: 'INPUT' }
+        target: { tagName: 'INPUT' },
+        preventDefault: () => {} // Added mock for preventDefault
     });
 
     assert.equal(actionCalled, false, 'Action should NOT be called when target is INPUT');
