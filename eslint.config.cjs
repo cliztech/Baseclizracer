@@ -18,7 +18,8 @@ module.exports = [
         console: 'readonly',
         global: 'readonly',
         require: 'readonly',
-        process: 'readonly'
+        process: 'readonly',
+        localStorage: 'readonly'
       }
     },
     rules: {

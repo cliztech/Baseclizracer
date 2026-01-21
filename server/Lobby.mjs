@@ -53,13 +53,13 @@ export class Lobby {
 
   handleMessage(client, message) {
     if (message.type === 'JOIN') {
-      this.joinRoom(client, message.roomId, message.spriteIndex);
+      this.joinRoom(client, message.roomId, message.spriteIndex, message.name);
     } else if (client.room) {
       client.room.handleMessage(client, message);
     }
   }
 
-  joinRoom(client, roomId, spriteIndex) {
+  joinRoom(client, roomId, spriteIndex, name) {
     if (client.room) {
       client.room.remove(client);
     }
@@ -71,6 +71,7 @@ export class Lobby {
     }
 
     client.state.spriteIndex = spriteIndex || 0;
+    client.state.name = name || 'Anonymous';
     room.add(client);
   }
 }
