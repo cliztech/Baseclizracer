@@ -63,19 +63,25 @@ export const Game = {  // a modified version of the game loop from my previous b
   setKeyListener: function(keys) {
     var onkey = function(keyCode, mode) {
       var n, k;
+      var handled = false;
       for(n = 0 ; n < keys.length ; n++) {
         k = keys[n];
         k.mode = k.mode || 'up';
         if ((k.key == keyCode) || (k.keys && (k.keys.indexOf(keyCode) >= 0))) {
           if (k.mode == mode) {
             k.action.call();
+            handled = true;
           }
         }
       }
+      return handled;
     };
     Dom.on(document, 'keydown', function(ev) {
       if (['INPUT', 'SELECT', 'TEXTAREA'].includes(ev.target.tagName)) return;
-      onkey(ev.keyCode, 'down');
+      if (ev.metaKey || ev.ctrlKey || ev.altKey) return;
+      if (onkey(ev.keyCode, 'down')) {
+        ev.preventDefault();
+      }
     });
     Dom.on(document, 'keyup',   function(ev) {
       if (['INPUT', 'SELECT', 'TEXTAREA'].includes(ev.target.tagName)) return;
