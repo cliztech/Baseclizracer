@@ -96,6 +96,75 @@ kbd {
   box-shadow: 4px 4px 0px rgba(0,0,0,0.2);
 }
 
+/* Login / Lobby Overlay */
+#login {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-family: 'Courier New', Courier, monospace;
+}
+
+#login h2 {
+  font-size: 2em;
+  margin-bottom: 1em;
+  text-shadow: 2px 2px 0px black;
+  border-bottom: 2px solid white;
+  padding-bottom: 0.2em;
+}
+
+#login .field {
+  margin-bottom: 1em;
+  text-align: center;
+}
+
+#login label {
+  display: block;
+  font-weight: bold;
+  margin-bottom: 0.5em;
+  font-size: 0.9em;
+  letter-spacing: 2px;
+}
+
+#login input {
+  font-size: 1.2em;
+  padding: 0.5em;
+  text-align: center;
+  border: 2px solid white;
+  background: black;
+  color: yellow;
+  font-family: 'Courier New', Courier, monospace;
+  width: 12em;
+  text-transform: uppercase;
+}
+
+#btn_join {
+  margin-top: 1em;
+  font-size: 1.5em;
+  padding: 0.5em 1em;
+  background: yellow;
+  color: black;
+  border: 2px solid white;
+  font-family: 'Courier New', Courier, monospace;
+  font-weight: bold;
+  box-shadow: 4px 4px 0px black;
+  transition: transform 0.1s;
+}
+
+#btn_join:active {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0px black;
+}
+
 /**************************************************/
 /* rudimentary heads up display (only used in v4) */
 /**************************************************/

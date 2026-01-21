@@ -113,6 +113,37 @@ export const Render = {
   },
 
   rumbleWidth:     function(projectedRoadWidth, lanes) { return projectedRoadWidth/Math.max(6,  2*lanes); },
-  laneMarkerWidth: function(projectedRoadWidth, lanes) { return projectedRoadWidth/Math.max(32, 8*lanes); }
+  laneMarkerWidth: function(projectedRoadWidth, lanes) { return projectedRoadWidth/Math.max(32, 8*lanes); },
+
+  nameTag: function(ctx, text, x, y, scale, width) {
+    if (!text) return;
+
+    // Scale font size based on perspective scale
+    var fontSize = Math.max(9, 24 * scale * (width/1024) * 100);
+
+    ctx.save();
+    ctx.font = "bold " + fontSize + "px Arial";
+    var textWidth = ctx.measureText(text).width;
+    var padding = fontSize * 0.4;
+    var boxWidth = textWidth + padding * 2;
+    var boxHeight = fontSize + padding;
+
+    // Center horizontally, place above y
+    var bx = x - boxWidth / 2;
+    var by = y - boxHeight;
+
+    // Draw Background Pill
+    ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
+    ctx.beginPath();
+    ctx.roundRect(bx, by, boxWidth, boxHeight, 4);
+    ctx.fill();
+
+    // Draw Text
+    ctx.fillStyle = "white";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(text, x, by + boxHeight / 2 + 1); // +1 for visual centering
+    ctx.restore();
+  }
 
 }

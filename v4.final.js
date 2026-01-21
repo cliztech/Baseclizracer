@@ -76,31 +76,58 @@ import { KEY, COLORS, BACKGROUND, SPRITES } from './constants.mjs';
       fast_lap_time:    { value: null, dom: Dom.get('fast_lap_time_value')    }
     }
 
-    const net = createSocket("ws://localhost:8080", data => {
-      if (data.type === 'WELCOME') {
-        data.players.forEach(p => addRemotePlayer(p.id, p));
-      } else if (data.type === 'PLAYER_JOIN') {
-        addRemotePlayer(data.id, data);
-      } else if (data.type === 'PLAYER_LEAVE') {
-        delete remotePlayers[data.id];
-      } else if (data.type === 'UPDATE') {
-        if (remotePlayers[data.id]) {
-          const p = remotePlayers[data.id];
-          p.target.x = data.x;
-          p.target.z = data.z;
-          p.target.speed = data.speed;
+    var net; // Socket connection deferred until join
+
+    Dom.on('btn_join', 'click', function() {
+      const name = Dom.get('input_name').value || 'Racer X';
+      const roomId = Dom.get('input_room').value || 'default';
+
+      Dom.hide('login');
+
+      // Initialize Network
+      net = createSocket("ws://localhost:8080", data => {
+        if (data.type === 'WELCOME') {
+          data.players.forEach(p => addRemotePlayer(p.id, p));
+        } else if (data.type === 'PLAYER_JOIN') {
+          addRemotePlayer(data.id, data);
+        } else if (data.type === 'PLAYER_LEAVE') {
+          delete remotePlayers[data.id];
+        } else if (data.type === 'UPDATE') {
+          if (remotePlayers[data.id]) {
+            const p = remotePlayers[data.id];
+            p.target.x = data.x;
+            p.target.z = data.z;
+            p.target.speed = data.speed;
+          }
         }
-      }
+      });
+
+      // Send join message
+      net.send('JOIN', {
+        roomId: roomId,
+        name: name,
+        spriteIndex: Util.randomInt(0, SPRITES.CARS.length-1)
+      });
+
+      // Store preferred name/room for next time
+      localStorage.setItem('base-racer-name', name);
+      localStorage.setItem('base-racer-room', roomId);
     });
 
-    // Send initial join to get a random sprite
-    net.send('JOIN', { roomId: 'default', spriteIndex: Util.randomInt(0, SPRITES.CARS.length-1) });
+    // Load defaults
+    if (localStorage.getItem('base-racer-name')) {
+      Dom.get('input_name').value = localStorage.getItem('base-racer-name');
+    }
+    if (localStorage.getItem('base-racer-room')) {
+      Dom.get('input_room').value = localStorage.getItem('base-racer-room');
+    }
 
     function addRemotePlayer(id, data) {
       remotePlayers[id] = {
         x: data.x || 0,
         z: data.z || 0,
         speed: data.speed || 0,
+        name: data.name || 'Unknown',
         target: {
           x: data.x || 0,
           z: data.z || 0,
@@ -224,7 +251,7 @@ import { KEY, COLORS, BACKGROUND, SPRITES } from './constants.mjs';
 
       // Network Throttling: Send updates at ~10Hz to save bandwidth
       timeSinceLastUpdate += dt;
-      if (timeSinceLastUpdate > 0.1) {
+      if (net && timeSinceLastUpdate > 0.1) {
         net.send('UPDATE', { x: playerX, z: position, speed });
         timeSinceLastUpdate = 0;
       }
@@ -381,6 +408,13 @@ import { KEY, COLORS, BACKGROUND, SPRITES } from './constants.mjs';
              var rX       = Util.interpolate(segment.p1.screen.x,     segment.p2.screen.x,     rPercent) + (rScale * player.x * roadWidth * width/2);
              var rY       = Util.interpolate(segment.p1.screen.y,     segment.p2.screen.y,     rPercent);
              Render.sprite(ctx, width, height, resolution, roadWidth, sprites, player.sprite, rScale, rX, rY, -0.5, -1, segment.clip);
+
+             // Calculate top of the sprite to place name tag
+             var spriteH = (player.sprite.h * rScale * width/2) * (SPRITES.SCALE * roadWidth);
+             var nameY = rY - spriteH;
+             if (!segment.clip || nameY > segment.clip) { // Simple clipping check (mostly correct)
+                Render.nameTag(ctx, player.name, rX, nameY, rScale, width);
+             }
           }
         }
 

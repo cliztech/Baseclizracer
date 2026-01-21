@@ -28,7 +28,8 @@ export class Room {
     // 4. Notify others of new player
     this.broadcast(client, 'PLAYER_JOIN', {
       id: client.id,
-      spriteIndex: client.state.spriteIndex
+      spriteIndex: client.state.spriteIndex,
+      name: client.state.name
     });
   }
 
