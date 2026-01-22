@@ -35,3 +35,7 @@
 ## 2026-01-18 - Reset for Playground UIs
 **Learning:** In dense configuration UIs (like the game tweaks), users feel safer exploring extremes when they have a single-click "panic button" to restore known-good state.
 **Action:** Always pair complex "tweak" controls with a global reset action.
+
+## 2025-01-29 - Semantic Forms in Game Overlays
+**Learning:** Game UI overlays (like login screens) often default to `div` soup. Wrapping inputs in a `<form>` tag not only improves semantics for screen readers but enables native behaviors like "Enter to Submit" and autocomplete without extra code.
+**Action:** Always wrap input groups in `<form>` tags, even in "app-like" overlays.

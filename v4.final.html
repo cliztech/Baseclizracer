@@ -86,18 +86,18 @@
     </canvas>
     <div id="loading">Loading...</div>
 
-    <div id="login">
+    <form id="login">
       <h2>DRIVER'S LICENSE</h2>
       <div class="field">
         <label for="input_name">CALL SIGN</label>
-        <input type="text" id="input_name" maxlength="12" placeholder="MAVERICK" value="Racer X">
+        <input type="text" id="input_name" maxlength="12" placeholder="MAVERICK" value="Racer X" autocomplete="nickname" required>
       </div>
       <div class="field">
         <label for="input_room">FREQUENCY</label>
-        <input type="text" id="input_room" maxlength="12" placeholder="DEFAULT" value="default">
+        <input type="text" id="input_room" maxlength="12" placeholder="DEFAULT" value="default" autocomplete="off" required>
       </div>
-      <button id="btn_join">IGNITE ENGINE</button>
-    </div>
+      <button id="btn_join" type="submit">IGNITE ENGINE</button>
+    </form>
   </div>
 
   <audio id='music'>
