@@ -1,13 +1,13 @@
 # Active Context
 
 ## Current Focus
-Establishing the Visionary Architect system context and enforcing "File Supremacy Protocol".
+Enhancing Gameplay Depth with Remote Player Collision.
 
 ## Recent Decisions
-- Refactored legacy `v1`, `v2`, `v3` scripts to use ES modules (`import`).
-- Removed `common.js` global script in favor of modular imports.
-- Updated `eslint.config.cjs` to remove global variable definitions.
+- Refactored `net.mjs` to buffer messages before connection is `OPEN`, solving race conditions.
+- Removed implicit "Auto-join default" in `server/Lobby.mjs` to enforce explicit room joining.
+- Verified networking integrity with `test/networking.test.mjs`.
 
 ## Next Atomic Steps
-- [ ] Populate `.context/progress.md` with roadmap items.
-- [ ] Verify system integrity with new context.
+- [ ] Implement remote player collision in `v4.final.js`.
+- [ ] Create `test/collision.test.mjs` to verify collision logic.
