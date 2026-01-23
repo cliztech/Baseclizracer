@@ -1,5 +1,6 @@
 import { setupTweakUI, refreshTweakUI } from "./tweak-ui.mjs";
 import { createSocket } from "./net.mjs";
+import { RemotePlayer } from './remote-player.mjs';
 import { Dom } from './dom.mjs';
 import { Util } from './util.mjs';
 import { Game } from './game.mjs';
@@ -94,10 +95,7 @@ import { KEY, COLORS, BACKGROUND, SPRITES } from './constants.mjs';
           delete remotePlayers[data.id];
         } else if (data.type === 'UPDATE') {
           if (remotePlayers[data.id]) {
-            const p = remotePlayers[data.id];
-            p.target.x = data.x;
-            p.target.z = data.z;
-            p.target.speed = data.speed;
+            remotePlayers[data.id].sync(data);
           }
         }
       });
@@ -123,36 +121,15 @@ import { KEY, COLORS, BACKGROUND, SPRITES } from './constants.mjs';
     }
 
     function addRemotePlayer(id, data) {
-      remotePlayers[id] = {
-        x: data.x || 0,
-        z: data.z || 0,
-        speed: data.speed || 0,
-        name: data.name || 'Unknown',
-        target: {
-          x: data.x || 0,
-          z: data.z || 0,
-          speed: data.speed || 0
-        },
-        sprite: SPRITES.CARS[(data.spriteIndex || 0) % SPRITES.CARS.length],
-        offset: 0,
-        percent: 0
-      };
+      remotePlayers[id] = new RemotePlayer(id, {
+        ...data,
+        sprite: SPRITES.CARS[(data.spriteIndex || 0) % SPRITES.CARS.length]
+      });
     }
 
     function updateRemotePlayers(dt) {
-      const smoothing = 10 * dt; // Converge in ~100ms
       for (const id in remotePlayers) {
-        const p = remotePlayers[id];
-        p.x = Util.interpolate(p.x, p.target.x, smoothing);
-
-        // Handle Z wrapping (Finish Line) to prevent driving backwards
-        if (trackLength && Math.abs(p.target.z - p.z) > trackLength / 2) {
-          p.z = p.target.z;
-        } else {
-          p.z = Util.interpolate(p.z, p.target.z, smoothing);
-        }
-
-        p.speed = Util.interpolate(p.speed, p.target.speed, smoothing);
+        remotePlayers[id].update(dt, trackLength);
       }
     }
 
