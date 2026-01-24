@@ -35,3 +35,7 @@
 ## 2026-01-18 - Reset for Playground UIs
 **Learning:** In dense configuration UIs (like the game tweaks), users feel safer exploring extremes when they have a single-click "panic button" to restore known-good state.
 **Action:** Always pair complex "tweak" controls with a global reset action.
+
+## 2026-01-20 - Enter to Submit
+**Learning:** Users instinctively press Enter to submit forms. Relying solely on a button click listener creates friction. Wrapping inputs in a `<form>` and listening for the `submit` event (while preventing default) enables native "Enter" key support and improves accessibility.
+**Action:** Use `<form>` tags for any input groups that conceptually represent a submission, and listen to `submit` events.
