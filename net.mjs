@@ -1,6 +1,7 @@
 /* global WebSocket */
 export function createSocket(url, onMessage) {
   const ws = new WebSocket(url);
+  const queue = [];
 
   ws.addEventListener('message', ev => {
     try {
@@ -11,16 +12,28 @@ export function createSocket(url, onMessage) {
     }
   });
 
+  ws.addEventListener('open', () => {
+    while (queue.length > 0) {
+      ws.send(queue.shift());
+    }
+  });
+
   return {
     send(type, data = {}) {
+      let payload;
+
+      // If data is already an object, merge it. Otherwise, treat as payload.
+      // Legacy support: if type is object, treat as old send(data)
+      if (typeof type === 'object') {
+        payload = JSON.stringify(type);
+      } else {
+        payload = JSON.stringify({ type, ...data });
+      }
+
       if (ws.readyState === WebSocket.OPEN) {
-        // If data is already an object, merge it. Otherwise, treat as payload.
-        // Legacy support: if type is object, treat as old send(data)
-        if (typeof type === 'object') {
-          ws.send(JSON.stringify(type));
-        } else {
-          ws.send(JSON.stringify({ type, ...data }));
-        }
+        ws.send(payload);
+      } else {
+        queue.push(payload);
       }
     }
   };

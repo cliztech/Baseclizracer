@@ -47,8 +47,6 @@ export class Lobby {
       this.clients.delete(ws);
     });
 
-    // Auto-join default room for backward compatibility
-    this.joinRoom(client, 'default', 0);
   }
 
   handleMessage(client, message) {
