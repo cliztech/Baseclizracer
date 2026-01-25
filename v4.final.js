@@ -182,6 +182,25 @@ import { KEY, COLORS, BACKGROUND, SPRITES } from './constants.mjs';
         }
       }
 
+      // Remote player collision
+      for (const id in remotePlayers) {
+        let p = remotePlayers[id];
+        let pW = p.sprite.w * SPRITES.SCALE;
+        let pSegment = findSegment(p.z);
+
+        // Only check collision if we are on the same segment or very close
+        // Since p.z is interpolated, we use segment index to check proximity
+        if (Math.abs(pSegment.index - playerSegment.index) < 2) {
+             if (speed > p.speed) {
+               if (Util.overlap(playerX, playerW, p.x, pW, 0.8)) {
+                 speed    = p.speed * (p.speed/speed); // Slow down to match their speed (approx)
+                 position = Util.increase(p.z, -playerZ, trackLength); // Don't drive through them
+                 break;
+               }
+             }
+        }
+      }
+
       for(n = 0 ; n < playerSegment.cars.length ; n++) {
         car  = playerSegment.cars[n];
         carW = car.sprite.w * SPRITES.SCALE;
