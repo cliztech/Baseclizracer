@@ -77,28 +77,43 @@ import { KEY, COLORS, BACKGROUND, SPRITES } from './constants.mjs';
       fast_lap_time:    { value: null, dom: Dom.get('fast_lap_time_value')    }
     }
 
-    var net; // Socket connection deferred until join
+    var net = createSocket("ws://localhost:8080", handleMessage);
+
+    function handleMessage(data) {
+      if (data.type === 'ROOM_LIST') {
+        renderRoomList(data.rooms);
+      } else if (data.type === 'WELCOME') {
+        data.players.forEach(p => addRemotePlayer(p.id, p));
+      } else if (data.type === 'PLAYER_JOIN') {
+        addRemotePlayer(data.id, data);
+      } else if (data.type === 'PLAYER_LEAVE') {
+        if (remotePlayers[data.id]) delete remotePlayers[data.id];
+      } else if (data.type === 'UPDATE') {
+        if (remotePlayers[data.id]) {
+          remotePlayers[data.id].sync(data);
+        }
+      }
+    }
+
+    function renderRoomList(rooms) {
+      const list = Dom.get('room_list');
+      if (!list) return; // Guard in case DOM isn't ready
+      list.innerHTML = '';
+      rooms.forEach(room => {
+        const li = document.createElement('li');
+        li.innerHTML = `<span>${room.id}</span><span class="count">${room.count}</span>`;
+        li.onclick = () => {
+          Dom.get('input_room').value = room.id;
+        };
+        list.appendChild(li);
+      });
+    }
 
     Dom.on('btn_join', 'click', function() {
       const name = Dom.get('input_name').value || 'Racer X';
       const roomId = Dom.get('input_room').value || 'default';
 
       Dom.hide('login');
-
-      // Initialize Network
-      net = createSocket("ws://localhost:8080", data => {
-        if (data.type === 'WELCOME') {
-          data.players.forEach(p => addRemotePlayer(p.id, p));
-        } else if (data.type === 'PLAYER_JOIN') {
-          addRemotePlayer(data.id, data);
-        } else if (data.type === 'PLAYER_LEAVE') {
-          delete remotePlayers[data.id];
-        } else if (data.type === 'UPDATE') {
-          if (remotePlayers[data.id]) {
-            remotePlayers[data.id].sync(data);
-          }
-        }
-      });
 
       // Send join message
       net.send('JOIN', {

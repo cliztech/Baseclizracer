@@ -2,7 +2,7 @@ import { WebSocket } from 'ws';
 import assert from 'assert';
 import { spawn } from 'child_process';
 
-const PORT = 8080;
+const PORT = 8082;
 const URL = `ws://localhost:${PORT}`;
 
 function createClient() {
@@ -27,7 +27,10 @@ function waitForMessage(ws, type) {
 
 async function runTest() {
   console.log('Starting server...');
-  const serverProcess = spawn('node', ['server/index.mjs'], { stdio: 'inherit' });
+  const serverProcess = spawn('node', ['server/index.mjs'], {
+    stdio: 'inherit',
+    env: { ...process.env, PORT }
+  });
 
   // Give server time to start
   await new Promise(r => setTimeout(r, 1000));
