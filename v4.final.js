@@ -218,6 +218,9 @@ import { KEY, COLORS, BACKGROUND, SPRITES } from './constants.mjs';
                if (Util.overlap(playerX, playerW, p.x, pW, 0.8)) {
                  speed    = p.speed * (p.speed/speed); // Slow down to match their speed (approx)
                  position = Util.increase(p.z, -playerZ, trackLength); // Don't drive through them
+                 // Bounce laterally to avoid getting stuck
+                 if (playerX > p.x) playerX += 0.1;
+                 else               playerX -= 0.1;
                  break;
                }
              }
