@@ -86,22 +86,22 @@
     </canvas>
     <div id="loading">Loading...</div>
 
-    <div id="login">
+    <form id="login" autocomplete="on">
       <h2>DRIVER'S LICENSE</h2>
       <div class="field">
         <label for="input_name">CALL SIGN</label>
-        <input type="text" id="input_name" maxlength="12" placeholder="MAVERICK" value="Racer X">
+        <input type="text" id="input_name" name="nickname" maxlength="12" placeholder="MAVERICK" value="Racer X" autocomplete="nickname">
       </div>
       <div class="field">
         <label for="input_room">FREQUENCY</label>
-        <input type="text" id="input_room" maxlength="12" placeholder="DEFAULT" value="default">
+        <input type="text" id="input_room" name="room" maxlength="12" placeholder="DEFAULT" value="default" autocomplete="off">
       </div>
       <div id="room_browser">
         <h3>DETECTED FREQUENCIES</h3>
         <ul id="room_list"></ul>
       </div>
-      <button id="btn_join">IGNITE ENGINE</button>
-    </div>
+      <button id="btn_join" type="submit">IGNITE ENGINE</button>
+    </form>
   </div>
 
   <audio id='music'>
