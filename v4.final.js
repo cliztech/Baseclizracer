@@ -109,7 +109,8 @@ import { KEY, COLORS, BACKGROUND, SPRITES } from './constants.mjs';
       });
     }
 
-    Dom.on('btn_join', 'click', function() {
+    Dom.on('login', 'submit', function(ev) {
+      ev.preventDefault();
       const name = Dom.get('input_name').value || 'Racer X';
       const roomId = Dom.get('input_room').value || 'default';
 
