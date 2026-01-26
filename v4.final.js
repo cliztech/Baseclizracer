@@ -5,6 +5,7 @@ import { Dom } from './dom.mjs';
 import { Util } from './util.mjs';
 import { Game } from './game.mjs';
 import { Render } from './render.mjs';
+import { Physics } from './physics.mjs';
 import { KEY, COLORS, BACKGROUND, SPRITES } from './constants.mjs';
 
     const DEFAULTS = {
@@ -200,12 +201,34 @@ import { KEY, COLORS, BACKGROUND, SPRITES } from './constants.mjs';
       for(n = 0 ; n < playerSegment.cars.length ; n++) {
         car  = playerSegment.cars[n];
         carW = car.sprite.w * SPRITES.SCALE;
-        if (speed > car.speed) {
-          if (Util.overlap(playerX, playerW, car.offset, carW, 0.8)) {
-            speed    = car.speed * (car.speed/speed);
-            position = Util.increase(car.z, -playerZ, trackLength);
-            break;
-          }
+        const result = Physics.checkCollision(
+          { x: playerX, w: playerW, speed: speed, relativeZ: playerZ, z: position + playerZ },
+          { x: car.offset, w: carW, speed: car.speed, z: car.z },
+          trackLength
+        );
+        if (result) {
+          speed = result.speed;
+          position = result.position;
+          break;
+        }
+      }
+
+      // Check collision with remote players
+      for (const id in remotePlayers) {
+        const p = remotePlayers[id];
+        const pW = p.sprite.w * SPRITES.SCALE;
+        const result = Physics.checkCollision(
+          { x: playerX, w: playerW, speed: speed, relativeZ: playerZ, z: position + playerZ },
+          { x: p.x, w: pW, speed: p.speed, z: p.z },
+          trackLength
+        );
+        if (result) {
+          speed = result.speed;
+          position = result.position;
+          // Don't break here, in case we hit multiple things?
+          // Actually, if we hit one, we snap behind it. Hitting another is unlikely in the same frame unless they are stacked.
+          // Breaking is safer to avoid jitter.
+          break;
         }
       }
 
