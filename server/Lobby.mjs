@@ -45,10 +45,11 @@ export class Lobby {
         client.room.remove(client);
       }
       this.clients.delete(ws);
+      this.broadcastRoomList();
     });
 
-    // Auto-join default room for backward compatibility
-    this.joinRoom(client, 'default', 0);
+    // Send room list to new client
+    client.send('ROOM_LIST', { rooms: this.getRoomList() });
   }
 
   handleMessage(client, message) {
@@ -73,5 +74,25 @@ export class Lobby {
     client.state.spriteIndex = spriteIndex || 0;
     client.state.name = name || 'Anonymous';
     room.add(client);
+
+    this.broadcastRoomList();
+  }
+
+  getRoomList() {
+    const list = [];
+    for (const [id, room] of this.rooms) {
+      // Only show rooms that have players, or 'default'
+      if (room.clients.size > 0 || id === 'default') {
+        list.push({ id, count: room.clients.size });
+      }
+    }
+    return list;
+  }
+
+  broadcastRoomList() {
+    const rooms = this.getRoomList();
+    for (const client of this.clients.values()) {
+      client.send('ROOM_LIST', { rooms });
+    }
   }
 }
