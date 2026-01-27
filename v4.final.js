@@ -6,6 +6,7 @@ import { Util } from './util.mjs';
 import { Game } from './game.mjs';
 import { Render } from './render.mjs';
 import { Physics } from './physics.mjs';
+import { renderRoomList } from './lobby-ui.mjs';
 import { KEY, COLORS, BACKGROUND, SPRITES } from './constants.mjs';
 
     const DEFAULTS = {
@@ -94,20 +95,6 @@ import { KEY, COLORS, BACKGROUND, SPRITES } from './constants.mjs';
           remotePlayers[data.id].sync(data);
         }
       }
-    }
-
-    function renderRoomList(rooms) {
-      const list = Dom.get('room_list');
-      if (!list) return; // Guard in case DOM isn't ready
-      list.innerHTML = '';
-      rooms.forEach(room => {
-        const li = document.createElement('li');
-        li.innerHTML = `<span>${room.id}</span><span class="count">${room.count}</span>`;
-        li.onclick = () => {
-          Dom.get('input_room').value = room.id;
-        };
-        list.appendChild(li);
-      });
     }
 
     Dom.on('login', 'submit', function(ev) {
