@@ -35,3 +35,7 @@
 ## 2026-01-18 - Reset for Playground UIs
 **Learning:** In dense configuration UIs (like the game tweaks), users feel safer exploring extremes when they have a single-click "panic button" to restore known-good state.
 **Action:** Always pair complex "tweak" controls with a global reset action.
+
+## 2026-01-20 - Interactive Lists as Controls
+**Learning:** For selecting items from a list (like game rooms), converting plain `<li>` elements into semantic, keyboard-accessible controls (`tabindex="0"`, `role="button"`) transforms a passive list into an active, screen-reader-friendly menu without complex ARIA widgets.
+**Action:** When list items trigger actions, treat them as buttons or links, ensuring keyboard operability and clear labels.
