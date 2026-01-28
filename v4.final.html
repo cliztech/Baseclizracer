@@ -64,6 +64,14 @@
       <td><input id="fogDensity" type='range' min='0' max='50' title="integer (0-50)"></td>
     </tr>
     <tr>
+      <th><label for="simulatedLatency">Network Latency (<span id="currentSimulatedLatency"></span>ms) :</label></th>
+      <td><input id="simulatedLatency" type='range' min='0' max='1000' step='50' value="0" title="integer (0-1000)"></td>
+    </tr>
+    <tr>
+      <th><label for="smoothing">Net Smoothing (<span id="currentSmoothing"></span>) :</label></th>
+      <td><input id="smoothing" type='range' min='1' max='30' value="10" title="integer (1-30)"></td>
+    </tr>
+    <tr>
       <th>Actions :</th>
       <td><button id="restart" aria-keyshortcuts="r">Restart Race</button><button id="resetSettings">Reset Settings</button></td>
     </tr>

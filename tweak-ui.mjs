@@ -26,6 +26,10 @@ export function setupTweakUI(callbacks, { Dom = defaultDom, Util = defaultUtil }
   Dom.on('fieldOfView',    'change', function(ev) { Dom.blur(ev); });
   Dom.on('fogDensity',     'input',  function(ev) { reset({ fogDensity:    Util.limit(Util.toInt(ev.target.value), Util.toInt(ev.target.getAttribute('min')), Util.toInt(ev.target.getAttribute('max'))) }); });
   Dom.on('fogDensity',     'change', function(ev) { Dom.blur(ev); });
+  Dom.on('simulatedLatency', 'input', function(ev) { reset({ simulatedLatency: Util.limit(Util.toInt(ev.target.value), Util.toInt(ev.target.getAttribute('min')), Util.toInt(ev.target.getAttribute('max'))) }); });
+  Dom.on('simulatedLatency', 'change', function(ev) { Dom.blur(ev); });
+  Dom.on('smoothing',        'input', function(ev) { reset({ smoothing:        Util.limit(Util.toInt(ev.target.value), Util.toInt(ev.target.getAttribute('min')), Util.toInt(ev.target.getAttribute('max'))) }); });
+  Dom.on('smoothing',        'change', function(ev) { Dom.blur(ev); });
 }
 
 export function refreshTweakUI(state, { Dom = defaultDom } = {}) {
@@ -35,6 +39,8 @@ export function refreshTweakUI(state, { Dom = defaultDom } = {}) {
   var drawDistance = state.drawDistance;
   var fieldOfView  = state.fieldOfView;
   var fogDensity   = state.fogDensity;
+  var simulatedLatency = state.simulatedLatency || 0;
+  var smoothing        = state.smoothing || 10;
 
   Dom.get('lanes').selectedIndex = lanes-1;
   Dom.get('currentRoadWidth').innerHTML      = Dom.get('roadWidth').value      = roadWidth;
@@ -42,4 +48,9 @@ export function refreshTweakUI(state, { Dom = defaultDom } = {}) {
   Dom.get('currentDrawDistance').innerHTML   = Dom.get('drawDistance').value   = drawDistance;
   Dom.get('currentFieldOfView').innerHTML    = Dom.get('fieldOfView').value    = fieldOfView;
   Dom.get('currentFogDensity').innerHTML     = Dom.get('fogDensity').value     = fogDensity;
+
+  if (Dom.get('currentSimulatedLatency')) {
+    Dom.get('currentSimulatedLatency').innerHTML = Dom.get('simulatedLatency').value = simulatedLatency;
+    Dom.get('currentSmoothing').innerHTML        = Dom.get('smoothing').value        = smoothing;
+  }
 }

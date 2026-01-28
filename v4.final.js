@@ -1,6 +1,5 @@
 import { setupTweakUI, refreshTweakUI } from "./tweak-ui.mjs";
-import { createSocket } from "./net.mjs";
-import { RemotePlayer } from './remote-player.mjs';
+import { NetworkManager } from "./network-manager.mjs";
 import { Rival } from './rival.mjs';
 import { Dom } from './dom.mjs';
 import { Util } from './util.mjs';
@@ -36,7 +35,6 @@ import { KEY, COLORS, BACKGROUND, SPRITES } from './constants.mjs';
     var treeOffset     = 0;                       // current tree scroll offset
     var segments       = [];                      // array of road segments
     var cars           = [];                      // array of cars on the road
-    var remotePlayers  = {};                      // map of remote players
     var stats          = Game.stats('fps');       // mr.doobs FPS counter
     var canvas         = Dom.get('canvas');       // our canvas...
     var ctx            = canvas.getContext('2d'); // ...and its drawing context
@@ -66,7 +64,6 @@ import { KEY, COLORS, BACKGROUND, SPRITES } from './constants.mjs';
     var totalCars      = 200;                     // total number of cars on the road
     var currentLapTime = 0;                       // current lap time
     var lastLapTime    = null;                    // last lap time
-    var timeSinceLastUpdate = 0;                  // time since last network update
 
     var keyLeft        = false;
     var keyRight       = false;
@@ -80,23 +77,13 @@ import { KEY, COLORS, BACKGROUND, SPRITES } from './constants.mjs';
       fast_lap_time:    { value: null, dom: Dom.get('fast_lap_time_value')    }
     }
 
-    var net = createSocket("ws://localhost:8080", handleMessage);
+    var networkManager = new NetworkManager({
+      onRoomList: renderRoomList,
+      onPlayerJoin: (id, p) => console.log(`Player joined: ${p.name}`),
+      onPlayerLeave: (id) => console.log(`Player left: ${id}`)
+    });
 
-    function handleMessage(data) {
-      if (data.type === 'ROOM_LIST') {
-        renderRoomList(data.rooms);
-      } else if (data.type === 'WELCOME') {
-        data.players.forEach(p => addRemotePlayer(p.id, p));
-      } else if (data.type === 'PLAYER_JOIN') {
-        addRemotePlayer(data.id, data);
-      } else if (data.type === 'PLAYER_LEAVE') {
-        if (remotePlayers[data.id]) delete remotePlayers[data.id];
-      } else if (data.type === 'UPDATE') {
-        if (remotePlayers[data.id]) {
-          remotePlayers[data.id].sync(data);
-        }
-      }
-    }
+    networkManager.connect("ws://localhost:8080");
 
     Dom.on('login', 'submit', function(ev) {
       ev.preventDefault();
@@ -106,11 +93,7 @@ import { KEY, COLORS, BACKGROUND, SPRITES } from './constants.mjs';
       Dom.hide('login');
 
       // Send join message
-      net.send('JOIN', {
-        roomId: roomId,
-        name: name,
-        spriteIndex: Util.randomInt(0, SPRITES.CARS.length-1)
-      });
+      networkManager.join(roomId, name, Util.randomInt(0, SPRITES.CARS.length-1));
 
       // Store preferred name/room for next time
       localStorage.setItem('base-racer-name', name);
@@ -123,19 +106,6 @@ import { KEY, COLORS, BACKGROUND, SPRITES } from './constants.mjs';
     }
     if (localStorage.getItem('base-racer-room')) {
       Dom.get('input_room').value = localStorage.getItem('base-racer-room');
-    }
-
-    function addRemotePlayer(id, data) {
-      remotePlayers[id] = new RemotePlayer(id, {
-        ...data,
-        sprite: SPRITES.CARS[(data.spriteIndex || 0) % SPRITES.CARS.length]
-      });
-    }
-
-    function updateRemotePlayers(dt) {
-      for (const id in remotePlayers) {
-        remotePlayers[id].update(dt, trackLength);
-      }
     }
 
     //=========================================================================
@@ -152,7 +122,7 @@ import { KEY, COLORS, BACKGROUND, SPRITES } from './constants.mjs';
       var startPosition = position;
 
       updateCars(dt, playerSegment, playerW);
-      updateRemotePlayers(dt);
+      networkManager.update(dt, trackLength);
 
       position = Util.increase(position, dt * speed, trackLength);
 
@@ -203,8 +173,8 @@ import { KEY, COLORS, BACKGROUND, SPRITES } from './constants.mjs';
       }
 
       // Check collision with remote players
-      for (const id in remotePlayers) {
-        const p = remotePlayers[id];
+      for (const id in networkManager.remotePlayers) {
+        const p = networkManager.remotePlayers[id];
         const pW = p.sprite.w * SPRITES.SCALE;
         const result = Physics.checkCollision(
           { x: playerX, w: playerW, speed: speed, relativeZ: playerZ, z: position + playerZ },
@@ -214,9 +184,6 @@ import { KEY, COLORS, BACKGROUND, SPRITES } from './constants.mjs';
         if (result) {
           speed = result.speed;
           position = result.position;
-          // Don't break here, in case we hit multiple things?
-          // Actually, if we hit one, we snap behind it. Hitting another is unlikely in the same frame unless they are stacked.
-          // Breaking is safer to avoid jitter.
           break;
         }
       }
@@ -253,12 +220,7 @@ import { KEY, COLORS, BACKGROUND, SPRITES } from './constants.mjs';
       updateHud('speed',            5 * Math.round(speed/500));
       updateHud('current_lap_time', formatTime(currentLapTime));
 
-      // Network Throttling: Send updates at ~10Hz to save bandwidth
-      timeSinceLastUpdate += dt;
-      if (net && timeSinceLastUpdate > 0.1) {
-        net.send('UPDATE', { x: playerX, z: position, speed });
-        timeSinceLastUpdate = 0;
-      }
+      networkManager.broadcastUpdate(dt, { x: playerX, z: position, speed });
     }
 
     //-------------------------------------------------------------------------
@@ -360,8 +322,8 @@ import { KEY, COLORS, BACKGROUND, SPRITES } from './constants.mjs';
         segment = segments[(baseSegment.index + n) % segments.length];
 
         // Render remote players
-        for (const id in remotePlayers) {
-          var player = remotePlayers[id];
+        for (const id in networkManager.remotePlayers) {
+          var player = networkManager.remotePlayers[id];
           var rSegment = findSegment(player.z);
           if (rSegment === segment) {
              var rPercent = Util.percentRemaining(player.z, segmentLength);
@@ -651,7 +613,15 @@ import { KEY, COLORS, BACKGROUND, SPRITES } from './constants.mjs';
       cameraDepth            = 1 / Math.tan((fieldOfView/2) * Math.PI/180);
       playerZ                = (cameraHeight * cameraDepth);
       resolution             = height/480;
-      refreshTweakUI({ lanes, roadWidth, cameraHeight, drawDistance, fieldOfView, fogDensity });
+
+      if (options.simulatedLatency !== undefined) networkManager.simulatedLatency = options.simulatedLatency;
+      if (options.smoothing !== undefined) networkManager.smoothing = options.smoothing;
+
+      refreshTweakUI({
+        lanes, roadWidth, cameraHeight, drawDistance, fieldOfView, fogDensity,
+        simulatedLatency: networkManager.simulatedLatency,
+        smoothing: networkManager.smoothing
+      });
 
       if ((segments.length==0) || (options.segmentLength) || (options.rumbleLength))
         resetRoad(); // only rebuild road when necessary
