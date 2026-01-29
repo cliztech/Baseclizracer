@@ -1,10 +1,12 @@
 import { setupTweakUI, refreshTweakUI } from "./tweak-ui.mjs";
-import { createSocket } from "./net.mjs";
-import { RemotePlayer } from './remote-player.mjs';
+import { NetworkManager } from "./network-manager.mjs";
+import { Rival } from './rival.mjs';
 import { Dom } from './dom.mjs';
 import { Util } from './util.mjs';
 import { Game } from './game.mjs';
 import { Render } from './render.mjs';
+import { Physics } from './physics.mjs';
+import { renderRoomList } from './lobby-ui.mjs';
 import { KEY, COLORS, BACKGROUND, SPRITES } from './constants.mjs';
 
     const DEFAULTS = {
@@ -33,7 +35,6 @@ import { KEY, COLORS, BACKGROUND, SPRITES } from './constants.mjs';
     var treeOffset     = 0;                       // current tree scroll offset
     var segments       = [];                      // array of road segments
     var cars           = [];                      // array of cars on the road
-    var remotePlayers  = {};                      // map of remote players
     var stats          = Game.stats('fps');       // mr.doobs FPS counter
     var canvas         = Dom.get('canvas');       // our canvas...
     var ctx            = canvas.getContext('2d'); // ...and its drawing context
@@ -63,7 +64,6 @@ import { KEY, COLORS, BACKGROUND, SPRITES } from './constants.mjs';
     var totalCars      = 200;                     // total number of cars on the road
     var currentLapTime = 0;                       // current lap time
     var lastLapTime    = null;                    // last lap time
-    var timeSinceLastUpdate = 0;                  // time since last network update
 
     var keyLeft        = false;
     var keyRight       = false;
@@ -77,35 +77,23 @@ import { KEY, COLORS, BACKGROUND, SPRITES } from './constants.mjs';
       fast_lap_time:    { value: null, dom: Dom.get('fast_lap_time_value')    }
     }
 
-    var net; // Socket connection deferred until join
+    var networkManager = new NetworkManager({
+      onRoomList: renderRoomList,
+      onPlayerJoin: (id, p) => console.log(`Player joined: ${p.name}`),
+      onPlayerLeave: (id) => console.log(`Player left: ${id}`)
+    });
 
-    Dom.on('btn_join', 'click', function() {
+    networkManager.connect("ws://localhost:8080");
+
+    Dom.on('login', 'submit', function(ev) {
+      ev.preventDefault();
       const name = Dom.get('input_name').value || 'Racer X';
       const roomId = Dom.get('input_room').value || 'default';
 
       Dom.hide('login');
 
-      // Initialize Network
-      net = createSocket("ws://localhost:8080", data => {
-        if (data.type === 'WELCOME') {
-          data.players.forEach(p => addRemotePlayer(p.id, p));
-        } else if (data.type === 'PLAYER_JOIN') {
-          addRemotePlayer(data.id, data);
-        } else if (data.type === 'PLAYER_LEAVE') {
-          delete remotePlayers[data.id];
-        } else if (data.type === 'UPDATE') {
-          if (remotePlayers[data.id]) {
-            remotePlayers[data.id].sync(data);
-          }
-        }
-      });
-
       // Send join message
-      net.send('JOIN', {
-        roomId: roomId,
-        name: name,
-        spriteIndex: Util.randomInt(0, SPRITES.CARS.length-1)
-      });
+      networkManager.join(roomId, name, Util.randomInt(0, SPRITES.CARS.length-1));
 
       // Store preferred name/room for next time
       localStorage.setItem('base-racer-name', name);
@@ -118,19 +106,6 @@ import { KEY, COLORS, BACKGROUND, SPRITES } from './constants.mjs';
     }
     if (localStorage.getItem('base-racer-room')) {
       Dom.get('input_room').value = localStorage.getItem('base-racer-room');
-    }
-
-    function addRemotePlayer(id, data) {
-      remotePlayers[id] = new RemotePlayer(id, {
-        ...data,
-        sprite: SPRITES.CARS[(data.spriteIndex || 0) % SPRITES.CARS.length]
-      });
-    }
-
-    function updateRemotePlayers(dt) {
-      for (const id in remotePlayers) {
-        remotePlayers[id].update(dt, trackLength);
-      }
     }
 
     //=========================================================================
@@ -147,7 +122,7 @@ import { KEY, COLORS, BACKGROUND, SPRITES } from './constants.mjs';
       var startPosition = position;
 
       updateCars(dt, playerSegment, playerW);
-      updateRemotePlayers(dt);
+      networkManager.update(dt, trackLength);
 
       position = Util.increase(position, dt * speed, trackLength);
 
@@ -185,12 +160,31 @@ import { KEY, COLORS, BACKGROUND, SPRITES } from './constants.mjs';
       for(n = 0 ; n < playerSegment.cars.length ; n++) {
         car  = playerSegment.cars[n];
         carW = car.sprite.w * SPRITES.SCALE;
-        if (speed > car.speed) {
-          if (Util.overlap(playerX, playerW, car.offset, carW, 0.8)) {
-            speed    = car.speed * (car.speed/speed);
-            position = Util.increase(car.z, -playerZ, trackLength);
-            break;
-          }
+        const result = Physics.checkCollision(
+          { x: playerX, w: playerW, speed: speed, relativeZ: playerZ, z: position + playerZ },
+          { x: car.offset, w: carW, speed: car.speed, z: car.z },
+          trackLength
+        );
+        if (result) {
+          speed = result.speed;
+          position = result.position;
+          break;
+        }
+      }
+
+      // Check collision with remote players
+      for (const id in networkManager.remotePlayers) {
+        const p = networkManager.remotePlayers[id];
+        const pW = p.sprite.w * SPRITES.SCALE;
+        const result = Physics.checkCollision(
+          { x: playerX, w: playerW, speed: speed, relativeZ: playerZ, z: position + playerZ },
+          { x: p.x, w: pW, speed: p.speed, z: p.z },
+          trackLength
+        );
+        if (result) {
+          speed = result.speed;
+          position = result.position;
+          break;
         }
       }
 
@@ -226,12 +220,7 @@ import { KEY, COLORS, BACKGROUND, SPRITES } from './constants.mjs';
       updateHud('speed',            5 * Math.round(speed/500));
       updateHud('current_lap_time', formatTime(currentLapTime));
 
-      // Network Throttling: Send updates at ~10Hz to save bandwidth
-      timeSinceLastUpdate += dt;
-      if (net && timeSinceLastUpdate > 0.1) {
-        net.send('UPDATE', { x: playerX, z: position, speed });
-        timeSinceLastUpdate = 0;
-      }
+      networkManager.broadcastUpdate(dt, { x: playerX, z: position, speed });
     }
 
     //-------------------------------------------------------------------------
@@ -241,8 +230,10 @@ import { KEY, COLORS, BACKGROUND, SPRITES } from './constants.mjs';
       for(n = 0 ; n < cars.length ; n++) {
         car         = cars[n];
         oldSegment  = findSegment(car.z);
-        car.offset  = car.offset + updateCarOffset(car, oldSegment, playerSegment, playerW);
-        car.z       = Util.increase(car.z, dt * car.speed, trackLength);
+
+        car.checkTraffic(segments, segmentLength, { x: playerX, w: playerW, speed: speed, z: position + playerZ });
+        car.update(dt, trackLength);
+
         car.percent = Util.percentRemaining(car.z, segmentLength); // useful for interpolation during rendering phase
         newSegment  = findSegment(car.z);
         if (oldSegment != newSegment) {
@@ -251,51 +242,6 @@ import { KEY, COLORS, BACKGROUND, SPRITES } from './constants.mjs';
           newSegment.cars.push(car);
         }
       }
-    }
-
-    function updateCarOffset(car, carSegment, playerSegment, playerW) {
-
-      var i, j, dir, segment, otherCar, otherCarW, lookahead = 20, carW = car.sprite.w * SPRITES.SCALE;
-
-      // optimization, dont bother steering around other cars when 'out of sight' of the player
-      if ((carSegment.index - playerSegment.index) > drawDistance)
-        return 0;
-
-      for(i = 1 ; i < lookahead ; i++) {
-        segment = segments[(carSegment.index+i)%segments.length];
-
-        if ((segment === playerSegment) && (car.speed > speed) && (Util.overlap(playerX, playerW, car.offset, carW, 1.2))) {
-          if (playerX > 0.5)
-            dir = -1;
-          else if (playerX < -0.5)
-            dir = 1;
-          else
-            dir = (car.offset > playerX) ? 1 : -1;
-          return dir * 1/i * (car.speed-speed)/maxSpeed; // the closer the cars (smaller i) and the greated the speed ratio, the larger the offset
-        }
-
-        for(j = 0 ; j < segment.cars.length ; j++) {
-          otherCar  = segment.cars[j];
-          otherCarW = otherCar.sprite.w * SPRITES.SCALE;
-          if ((car.speed > otherCar.speed) && Util.overlap(car.offset, carW, otherCar.offset, otherCarW, 1.2)) {
-            if (otherCar.offset > 0.5)
-              dir = -1;
-            else if (otherCar.offset < -0.5)
-              dir = 1;
-            else
-              dir = (car.offset > otherCar.offset) ? 1 : -1;
-            return dir * 1/i * (car.speed-otherCar.speed)/maxSpeed;
-          }
-        }
-      }
-
-      // if no cars ahead, but I have somehow ended up off road, then steer back on
-      if (car.offset < -0.9)
-        return 0.1;
-      else if (car.offset > 0.9)
-        return -0.1;
-      else
-        return 0;
     }
 
     //-------------------------------------------------------------------------
@@ -376,8 +322,8 @@ import { KEY, COLORS, BACKGROUND, SPRITES } from './constants.mjs';
         segment = segments[(baseSegment.index + n) % segments.length];
 
         // Render remote players
-        for (const id in remotePlayers) {
-          var player = remotePlayers[id];
+        for (const id in networkManager.remotePlayers) {
+          var player = networkManager.remotePlayers[id];
           var rSegment = findSegment(player.z);
           if (rSegment === segment) {
              var rPercent = Util.percentRemaining(player.z, segmentLength);
@@ -610,7 +556,7 @@ import { KEY, COLORS, BACKGROUND, SPRITES } from './constants.mjs';
         z      = Math.floor(Math.random() * segments.length) * segmentLength;
         sprite = Util.randomChoice(SPRITES.CARS);
         speed  = maxSpeed/4 + Math.random() * maxSpeed/(sprite == SPRITES.SEMI ? 4 : 2);
-        car = { offset: offset, z: z, sprite: sprite, speed: speed };
+        car = new Rival({ offset: offset, z: z, sprite: sprite, speed: speed });
         segment = findSegment(car.z);
         segment.cars.push(car);
         cars.push(car);
@@ -667,7 +613,15 @@ import { KEY, COLORS, BACKGROUND, SPRITES } from './constants.mjs';
       cameraDepth            = 1 / Math.tan((fieldOfView/2) * Math.PI/180);
       playerZ                = (cameraHeight * cameraDepth);
       resolution             = height/480;
-      refreshTweakUI({ lanes, roadWidth, cameraHeight, drawDistance, fieldOfView, fogDensity });
+
+      if (options.simulatedLatency !== undefined) networkManager.simulatedLatency = options.simulatedLatency;
+      if (options.smoothing !== undefined) networkManager.smoothing = options.smoothing;
+
+      refreshTweakUI({
+        lanes, roadWidth, cameraHeight, drawDistance, fieldOfView, fogDensity,
+        simulatedLatency: networkManager.simulatedLatency,
+        smoothing: networkManager.smoothing
+      });
 
       if ((segments.length==0) || (options.segmentLength) || (options.rumbleLength))
         resetRoad(); // only rebuild road when necessary
