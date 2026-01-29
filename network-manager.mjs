@@ -1,6 +1,6 @@
 import { createSocket } from './net.mjs';
 import { RemotePlayer } from './remote-player.mjs';
-import { SPRITES } from './constants.mjs';
+import { SPRITES, MSG } from './constants.mjs';
 
 /**
  * NetworkManager
@@ -40,7 +40,7 @@ export class NetworkManager {
    * Joins a specific room.
    */
   join(roomId, name, spriteIndex) {
-    this.send('JOIN', {
+    this.send(MSG.JOIN, {
       roomId,
       name,
       spriteIndex
@@ -69,7 +69,7 @@ export class NetworkManager {
   broadcastUpdate(dt, state) {
     this.timeSinceLastUpdate += dt;
     if (this.timeSinceLastUpdate > 0.1) {
-      this.send('UPDATE', state);
+      this.send(MSG.UPDATE, state);
       this.timeSinceLastUpdate = 0;
     }
   }
@@ -105,23 +105,23 @@ export class NetworkManager {
 
   _handleDispatch(data) {
     switch (data.type) {
-      case 'ROOM_LIST':
+      case MSG.ROOM_LIST:
         this.onRoomList(data.rooms);
         break;
-      case 'WELCOME':
+      case MSG.WELCOME:
         // Initial room population
         data.players.forEach(p => this._addRemotePlayer(p.id, p));
         break;
-      case 'PLAYER_JOIN':
+      case MSG.PLAYER_JOIN:
         this._addRemotePlayer(data.id, data);
         break;
-      case 'PLAYER_LEAVE':
+      case MSG.PLAYER_LEAVE:
         if (this.remotePlayers[data.id]) {
           delete this.remotePlayers[data.id];
           this.onPlayerLeave(data.id);
         }
         break;
-      case 'UPDATE':
+      case MSG.UPDATE:
         if (this.remotePlayers[data.id]) {
           this.remotePlayers[data.id].sync(data);
         }
