@@ -1,4 +1,3 @@
-/* eslint-env node */
 /* global URL */
 import test from 'node:test';
 import assert from 'node:assert/strict';
