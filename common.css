@@ -186,6 +186,13 @@ kbd {
   color: yellow;
 }
 
+/* Selected room in lobby list */
+#room_list li.selected {
+  background: #444;
+  color: yellow;
+  border-left: 4px solid yellow;
+}
+
 #room_list li .count {
   background: #555;
   padding: 1px 6px;
