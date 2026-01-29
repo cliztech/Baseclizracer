@@ -8,6 +8,15 @@ export function renderRoomList(rooms) {
   const currentRoom = input ? input.value : null;
 
   list.innerHTML = '';
+
+  if (rooms.length === 0) {
+    const li = document.createElement('li');
+    li.innerHTML = "No signals detected...";
+    li.classList.add('empty-state');
+    list.appendChild(li);
+    return;
+  }
+
   rooms.forEach(room => {
     const li = document.createElement('li');
     li.innerHTML = `<span>${room.id}</span><span class="count">${room.count}</span>`;

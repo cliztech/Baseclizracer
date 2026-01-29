@@ -201,6 +201,20 @@ kbd {
   color: white;
 }
 
+#room_list li.empty-state {
+  font-style: italic;
+  color: #999;
+  text-align: center;
+  cursor: default;
+  display: block;
+  border: none;
+}
+
+#room_list li.empty-state:hover {
+  background: transparent;
+  color: #999;
+}
+
 #btn_join {
   margin-top: 1em;
   font-size: 1.5em;

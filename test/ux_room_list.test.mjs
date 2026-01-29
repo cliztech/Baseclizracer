@@ -219,4 +219,19 @@ describe('Lobby UX', async () => {
     assert.strictEqual(li2.getAttribute('aria-current'), 'true', 'New aria-current should be added');
     assert.strictEqual(global.mocks['input_room'].value, 'room2', 'Input value should update');
   });
+
+  it('should render empty state when no rooms are available', () => {
+    const rooms = [];
+    global.mocks['room_list'] = new MockElement('ul');
+
+    renderRoomList(rooms);
+
+    const list = global.mocks['room_list'];
+    assert.strictEqual(list.children.length, 1);
+
+    const li = list.children[0];
+    assert.strictEqual(li.tagName, 'LI');
+    assert.ok(li.classList.contains('empty-state'), 'Should have empty-state class');
+    assert.strictEqual(li.innerHTML, 'No signals detected...');
+  });
 });
