@@ -7,25 +7,12 @@ import { Game } from './game.mjs';
 import { Render } from './render.mjs';
 import { Physics } from './physics.mjs';
 import { renderRoomList } from './lobby-ui.mjs';
-import { KEY, COLORS, BACKGROUND, SPRITES } from './constants.mjs';
+import { KEY, COLORS, BACKGROUND, SPRITES, GAME_CONFIG } from './constants.mjs';
 
-    const DEFAULTS = {
-      width: 1024,
-      height: 768,
-      roadWidth: 2000,
-      segmentLength: 200,
-      rumbleLength: 3,
-      lanes: 3,
-      fieldOfView: 100,
-      cameraHeight: 1000,
-      drawDistance: 300,
-      fogDensity: 5,
-    };
-
-    var fps            = 60;                      // how many 'update' frames per second
+    var fps            = GAME_CONFIG.fps;         // how many 'update' frames per second
     var step           = 1/fps;                   // how long is each frame (in seconds)
-    var width          = DEFAULTS.width;          // logical canvas width
-    var height         = DEFAULTS.height;         // logical canvas height
+    var width          = GAME_CONFIG.width;       // logical canvas width
+    var height         = GAME_CONFIG.height;      // logical canvas height
     var centrifugal    = 0.3;                     // centrifugal force multiplier when going around curves
     var skySpeed       = 0.001;                   // background sky layer scroll speed when going around curve (or up hill)
     var hillSpeed      = 0.002;                   // background hill layer scroll speed when going around curve (or up hill)
@@ -41,21 +28,21 @@ import { KEY, COLORS, BACKGROUND, SPRITES } from './constants.mjs';
     var background     = null;                    // our background image (loaded below)
     var sprites        = null;                    // our spritesheet (loaded below)
     var resolution     = null;                    // scaling factor to provide resolution independence (computed)
-    var roadWidth      = DEFAULTS.roadWidth;      // actually half the roads width, easier math if the road spans from -roadWidth to +roadWidth
-    var segmentLength  = DEFAULTS.segmentLength;  // length of a single segment
-    var rumbleLength   = DEFAULTS.rumbleLength;   // number of segments per red/white rumble strip
+    var roadWidth      = GAME_CONFIG.roadWidth;   // actually half the roads width, easier math if the road spans from -roadWidth to +roadWidth
+    var segmentLength  = GAME_CONFIG.segmentLength; // length of a single segment
+    var rumbleLength   = GAME_CONFIG.rumbleLength; // number of segments per red/white rumble strip
     var trackLength    = null;                    // z length of entire track (computed)
-    var lanes          = DEFAULTS.lanes;          // number of lanes
-    var fieldOfView    = DEFAULTS.fieldOfView;    // angle (degrees) for field of view
-    var cameraHeight   = DEFAULTS.cameraHeight;   // z height of camera
+    var lanes          = GAME_CONFIG.lanes;       // number of lanes
+    var fieldOfView    = GAME_CONFIG.fieldOfView; // angle (degrees) for field of view
+    var cameraHeight   = GAME_CONFIG.cameraHeight;// z height of camera
     var cameraDepth    = null;                    // z distance camera is from screen (computed)
-    var drawDistance   = DEFAULTS.drawDistance;   // number of segments to draw
+    var drawDistance   = GAME_CONFIG.drawDistance;// number of segments to draw
     var playerX        = 0;                       // player x offset from center of road (-1 to 1 to stay independent of roadWidth)
     var playerZ        = null;                    // player relative z distance from camera (computed)
-    var fogDensity     = DEFAULTS.fogDensity;     // exponential fog density
+    var fogDensity     = GAME_CONFIG.fogDensity;  // exponential fog density
     var position       = 0;                       // current camera Z position (add playerZ to get player's absolute Z position)
     var speed          = 0;                       // current speed
-    var maxSpeed       = segmentLength/step;      // top speed (ensure we can't move more than 1 segment in a single frame to make collision detection easier)
+    var maxSpeed       = GAME_CONFIG.maxSpeed;    // top speed (ensure we can't move more than 1 segment in a single frame to make collision detection easier)
     var accel          =  maxSpeed/5;             // acceleration rate - tuned until it 'felt' right
     var breaking       = -maxSpeed;               // deceleration rate when braking
     var decel          = -maxSpeed/5;             // 'natural' deceleration rate when neither accelerating, nor braking
@@ -595,7 +582,7 @@ import { KEY, COLORS, BACKGROUND, SPRITES } from './constants.mjs';
 
     Dom.on('resetSettings', 'click', function() {
       Dom.get('resolution').value = 'high';
-      reset(DEFAULTS);
+      reset(GAME_CONFIG);
     });
 
     function reset(options) {

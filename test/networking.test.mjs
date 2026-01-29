@@ -1,6 +1,7 @@
 import { WebSocket } from 'ws';
 import assert from 'assert';
 import { spawn } from 'child_process';
+import { MSG } from '../constants.mjs';
 
 const PORT = 8082;
 const URL = `ws://localhost:${PORT}`;
@@ -40,7 +41,7 @@ async function runTest() {
     const clientA = await createClient('A');
 
     console.log('Client A joining room "race1"...');
-    clientA.send(JSON.stringify({ type: 'JOIN', roomId: 'race1', spriteIndex: 0, name: 'Maverick' }));
+    clientA.send(JSON.stringify({ type: MSG.JOIN, roomId: 'race1', spriteIndex: 0, name: 'Maverick' }));
 
     // Give A time to switch rooms
     await new Promise(r => setTimeout(r, 200));
@@ -50,23 +51,23 @@ async function runTest() {
     // Client B auto-joins 'default'. A is in 'race1'. A sees nothing.
 
     console.log('Client B joining room "race1"...');
-    clientB.send(JSON.stringify({ type: 'JOIN', roomId: 'race1', spriteIndex: 1, name: 'Goose' }));
+    clientB.send(JSON.stringify({ type: MSG.JOIN, roomId: 'race1', spriteIndex: 1, name: 'Goose' }));
 
     // Client A should see Client B join
     console.log('Waiting for Client A to see Client B join...');
-    const joinMsg = await waitForMessage(clientA, 'PLAYER_JOIN');
+    const joinMsg = await waitForMessage(clientA, MSG.PLAYER_JOIN);
     console.log('Client A received PLAYER_JOIN:', joinMsg);
     assert.strictEqual(joinMsg.spriteIndex, 1);
     assert.strictEqual(joinMsg.name, 'Goose');
 
     // Client B sends update
     console.log('Client B sending UPDATE...');
-    const updateData = { type: 'UPDATE', x: 0.5, z: 100, speed: 50 };
+    const updateData = { type: MSG.UPDATE, x: 0.5, z: 100, speed: 50 };
     clientB.send(JSON.stringify(updateData));
 
     // Client A should receive update
     console.log('Waiting for Client A to receive UPDATE...');
-    const updateMsg = await waitForMessage(clientA, 'UPDATE');
+    const updateMsg = await waitForMessage(clientA, MSG.UPDATE);
     console.log('Client A received UPDATE:', updateMsg);
     assert.strictEqual(updateMsg.x, 0.5);
     assert.strictEqual(updateMsg.speed, 50);

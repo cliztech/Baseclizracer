@@ -1,6 +1,7 @@
 import { WebSocketServer } from 'ws';
 import { Client } from './Client.mjs';
 import { Room } from './Room.mjs';
+import { MSG } from '../constants.mjs';
 
 export class Lobby {
   constructor(port = 8080) {
@@ -31,6 +32,11 @@ export class Lobby {
     console.log(`Client connected: ${client.id}`);
 
     ws.on('message', data => {
+      if (!client.rateLimit(20)) { // 20 msg/sec limit
+        // console.warn(`Client ${client.id} exceeded rate limit.`);
+        return;
+      }
+
       try {
         const message = JSON.parse(data);
         this.handleMessage(client, message);
@@ -49,11 +55,11 @@ export class Lobby {
     });
 
     // Send room list to new client
-    client.send('ROOM_LIST', { rooms: this.getRoomList() });
+    client.send(MSG.ROOM_LIST, { rooms: this.getRoomList() });
   }
 
   handleMessage(client, message) {
-    if (message.type === 'JOIN') {
+    if (message.type === MSG.JOIN) {
       this.joinRoom(client, message.roomId, message.spriteIndex, message.name);
     } else if (client.room) {
       client.room.handleMessage(client, message);
@@ -92,7 +98,7 @@ export class Lobby {
   broadcastRoomList() {
     const rooms = this.getRoomList();
     for (const client of this.clients.values()) {
-      client.send('ROOM_LIST', { rooms });
+      client.send(MSG.ROOM_LIST, { rooms });
     }
   }
 }
