@@ -104,15 +104,28 @@ import { KEY, COLORS, BACKGROUND, SPRITES, GAME_CONFIG } from './constants.mjs';
       ev.preventDefault();
       const name = Dom.get('input_name').value || 'Racer X';
       const roomId = Dom.get('input_room').value || 'default';
+      const btn = Dom.get('btn_join');
 
-      Dom.hide('login');
+      btn.disabled = true;
+      btn.innerHTML = "IGNITING...";
 
-      // Send join message
-      networkManager.join(roomId, name, Util.randomInt(0, SPRITES.CARS.length-1));
+      setTimeout(() => {
+        Dom.hide('login');
 
-      // Store preferred name/room for next time
-      localStorage.setItem('base-racer-name', name);
-      localStorage.setItem('base-racer-room', roomId);
+        // Send join message
+        networkManager.join(roomId, name, Util.randomInt(0, SPRITES.CARS.length-1));
+
+        // Store preferred name/room for next time
+        localStorage.setItem('base-racer-name', name);
+        localStorage.setItem('base-racer-room', roomId);
+
+        // Move focus to game container for immediate keyboard control
+        Dom.get('racer').focus();
+
+        // Reset button state
+        btn.disabled = false;
+        btn.innerHTML = "IGNITE ENGINE";
+      }, 500);
     });
 
     // Load defaults
