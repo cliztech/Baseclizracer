@@ -8,7 +8,7 @@ import { SPRITES, MSG } from './constants.mjs';
  * Orchestrates connection, state synchronization, and resilience simulation.
  */
 export class NetworkManager {
-  constructor({ onRoomList, onPlayerJoin, onPlayerLeave }) {
+  constructor({ onRoomList, onPlayerJoin, onPlayerLeave, onChat }) {
     this.socket = null;
     this.remotePlayers = {};
 
@@ -20,10 +20,12 @@ export class NetworkManager {
     this.onRoomList = onRoomList || (() => {});
     this.onPlayerJoin = onPlayerJoin || (() => {});
     this.onPlayerLeave = onPlayerLeave || (() => {});
+    this.onChat = onChat || (() => {});
 
     // State
     this.connected = false;
     this.timeSinceLastUpdate = 0;
+    this.latency = 0; // Real network latency in ms
   }
 
   /**
@@ -34,6 +36,9 @@ export class NetworkManager {
   connect(url) {
     this.socket = createSocket(url, (data) => this._onMessage(data));
     this.connected = true; // Technically 'connecting', but createsocket buffers
+
+    // Start Ping Loop (Heartbeat)
+    setInterval(() => this.ping(), 2000);
   }
 
   /**
@@ -92,6 +97,20 @@ export class NetworkManager {
   }
 
   /**
+   * Sends a ping to measure latency.
+   */
+  ping() {
+    this.send(MSG.PING, { timestamp: Date.now() });
+  }
+
+  /**
+   * Sends a chat message.
+   */
+  sendChat(message) {
+    this.send(MSG.CHAT, { message });
+  }
+
+  /**
    * Internal message handler.
    */
   _onMessage(data) {
@@ -125,6 +144,12 @@ export class NetworkManager {
         if (this.remotePlayers[data.id]) {
           this.remotePlayers[data.id].sync(data);
         }
+        break;
+      case MSG.PONG:
+        this.latency = Math.round((Date.now() - data.clientTime) / 2);
+        break;
+      case MSG.CHAT:
+        this.onChat(data);
         break;
     }
   }

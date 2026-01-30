@@ -61,16 +61,44 @@ import { KEY, COLORS, BACKGROUND, SPRITES, GAME_CONFIG } from './constants.mjs';
       speed:            { value: null, dom: Dom.get('speed_value')            },
       current_lap_time: { value: null, dom: Dom.get('current_lap_time_value') },
       last_lap_time:    { value: null, dom: Dom.get('last_lap_time_value')    },
-      fast_lap_time:    { value: null, dom: Dom.get('fast_lap_time_value')    }
+      fast_lap_time:    { value: null, dom: Dom.get('fast_lap_time_value')    },
+      latency:          { value: null, dom: Dom.get('latency_value')          }
     }
 
     var networkManager = new NetworkManager({
       onRoomList: renderRoomList,
       onPlayerJoin: (id, p) => console.log(`Player joined: ${p.name}`),
-      onPlayerLeave: (id) => console.log(`Player left: ${id}`)
+      onPlayerLeave: (id) => console.log(`Player left: ${id}`),
+      onChat: (data) => {
+        const ul = Dom.get('chat_messages');
+        const li = document.createElement('li');
+        if (data.id === 'system') {
+          li.classList.add('system');
+          li.innerHTML = data.message;
+        } else {
+          // Sanitize to prevent HTML injection
+          const safeName = data.name.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+          const safeMsg = data.message.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+          li.innerHTML = `<span class='author'>${safeName}:</span> ${safeMsg}`;
+        }
+        ul.appendChild(li);
+        ul.scrollTop = ul.scrollHeight;
+      }
     });
 
     networkManager.connect("ws://localhost:8080");
+
+    Dom.on('chat_input', 'keydown', function(ev) {
+      if (ev.key === 'Enter') {
+        const input = Dom.get('chat_input');
+        const msg = input.value.trim();
+        if (msg) {
+          networkManager.sendChat(msg);
+          input.value = '';
+          input.blur();
+        }
+      }
+    });
 
     Dom.on('login', 'submit', function(ev) {
       ev.preventDefault();
@@ -206,6 +234,7 @@ import { KEY, COLORS, BACKGROUND, SPRITES, GAME_CONFIG } from './constants.mjs';
 
       updateHud('speed',            5 * Math.round(speed/500));
       updateHud('current_lap_time', formatTime(currentLapTime));
+      updateHud('latency',          networkManager.latency);
 
       networkManager.broadcastUpdate(dt, { x: playerX, z: position, speed });
     }

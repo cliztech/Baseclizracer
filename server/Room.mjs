@@ -67,6 +67,21 @@ export class Room {
         z: client.state.z,
         speed: client.state.speed
       });
+    } else if (message.type === MSG.PING) {
+      client.send(MSG.PONG, {
+        clientTime: message.timestamp,
+        serverTime: Date.now()
+      });
+    } else if (message.type === MSG.CHAT) {
+      if (!message.message || typeof message.message !== 'string' || message.message.length > 140) {
+        return; // Ignore invalid/too long messages
+      }
+      // Broadcast to ALL (including sender) to ensure ordering
+      this.broadcast(null, MSG.CHAT, {
+        id: client.id,
+        name: client.state.name,
+        message: message.message
+      });
     }
   }
 
