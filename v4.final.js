@@ -88,15 +88,14 @@ import { KEY, COLORS, BACKGROUND, SPRITES, GAME_CONFIG } from './constants.mjs';
 
     networkManager.connect("ws://localhost:8080");
 
-    Dom.on('chat_input', 'keydown', function(ev) {
-      if (ev.key === 'Enter') {
-        const input = Dom.get('chat_input');
-        const msg = input.value.trim();
-        if (msg) {
-          networkManager.sendChat(msg);
-          input.value = '';
-          input.blur();
-        }
+    Dom.on('chat', 'submit', function(ev) {
+      ev.preventDefault();
+      const input = Dom.get('chat_input');
+      const msg = input.value.trim();
+      if (msg) {
+        networkManager.sendChat(msg);
+        input.value = '';
+        input.blur();
       }
     });
 

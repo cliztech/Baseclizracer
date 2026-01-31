@@ -94,10 +94,12 @@
       Sorry, this example cannot be run because your browser does not support the &lt;canvas&gt; element
     </canvas>
 
-    <div id="chat">
-      <ul id="chat_messages"></ul>
+    <form id="chat" action="#">
+      <ul id="chat_messages" aria-live="polite" role="log"></ul>
+      <label for="chat_input" class="visually-hidden">Chat message</label>
       <input type="text" id="chat_input" placeholder="Press Enter to chat..." maxlength="140" autocomplete="off">
-    </div>
+      <button type="submit" hidden>Send</button>
+    </form>
 
     <div id="loading">Loading...</div>
 
