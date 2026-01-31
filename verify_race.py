@@ -39,7 +39,7 @@ def verify_race_state():
         # Wait a bit for the overlay "GET READY"
         time.sleep(0.5)
 
-        page1.screenshot(path="/home/jules/verification/countdown.png")
+        page1.screenshot(path="verification/countdown.png")
         print("P1: COUNTDOWN screenshot taken.")
 
         browser.close()
