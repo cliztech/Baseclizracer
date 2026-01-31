@@ -93,5 +93,13 @@ export const MSG = {
   PLAYER_LEAVE: 'PLAYER_LEAVE',
   CHAT: 'CHAT',
   PING: 'PING',
-  PONG: 'PONG'
+  PONG: 'PONG',
+  STATE_UPDATE: 'STATE_UPDATE'
+};
+
+export const RACE_STATE = {
+  WAITING: 0,
+  COUNTDOWN: 1,
+  RACING: 2,
+  FINISHED: 3
 };

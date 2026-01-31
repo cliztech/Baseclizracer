@@ -1,6 +1,6 @@
 import { createSocket } from './net.mjs';
 import { RemotePlayer } from './remote-player.mjs';
-import { SPRITES, MSG } from './constants.mjs';
+import { SPRITES, MSG, RACE_STATE } from './constants.mjs';
 
 /**
  * NetworkManager
@@ -26,6 +26,7 @@ export class NetworkManager {
     this.connected = false;
     this.timeSinceLastUpdate = 0;
     this.latency = 0; // Real network latency in ms
+    this.raceState = RACE_STATE.WAITING;
   }
 
   /**
@@ -129,7 +130,11 @@ export class NetworkManager {
         break;
       case MSG.WELCOME:
         // Initial room population
+        this.raceState = data.state !== undefined ? data.state : RACE_STATE.WAITING;
         data.players.forEach(p => this._addRemotePlayer(p.id, p));
+        break;
+      case MSG.STATE_UPDATE:
+        this.raceState = data.state;
         break;
       case MSG.PLAYER_JOIN:
         this._addRemotePlayer(data.id, data);
