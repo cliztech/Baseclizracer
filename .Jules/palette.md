@@ -39,3 +39,7 @@
 ## 2026-01-20 - Interactive Lists as Controls
 **Learning:** For selecting items from a list (like game rooms), converting plain `<li>` elements into semantic, keyboard-accessible controls (`tabindex="0"`, `role="button"`) transforms a passive list into an active, screen-reader-friendly menu without complex ARIA widgets.
 **Action:** When list items trigger actions, treat them as buttons or links, ensuring keyboard operability and clear labels.
+
+## 2026-02-15 - Implicit Form Submission
+**Learning:** For inputs like chat that need "Enter to submit" behavior, using a semantic `<form>` with a hidden `submit` button is more robust and accessible than custom `keydown` listeners. It handles mobile keyboards ("Go" button) and focus management natively.
+**Action:** Wrap single-input UI patterns in `<form>` tags and listen for the `submit` event instead of `keydown`.
