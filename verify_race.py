@@ -21,7 +21,7 @@ def verify_race_state():
         time.sleep(1)
 
         # Screenshot WAITING
-        page1.screenshot(path="/home/jules/verification/waiting.png")
+        page1.screenshot(path="verification/waiting.png")
         print("P1: WAITING screenshot taken.")
 
         # Player 2
