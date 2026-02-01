@@ -107,7 +107,7 @@ import { KEY, COLORS, BACKGROUND, SPRITES, GAME_CONFIG, RACE_STATE } from './con
       const btn = Dom.get('btn_join');
 
       btn.disabled = true;
-      btn.innerHTML = "IGNITING...";
+      btn.innerHTML = "<span class='spinner'></span>IGNITING...";
 
       setTimeout(() => {
         Dom.hide('login');
