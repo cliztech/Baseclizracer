@@ -7,7 +7,7 @@ import { Game } from './game.mjs';
 import { Render } from './render.mjs';
 import { Physics } from './physics.mjs';
 import { renderRoomList } from './lobby-ui.mjs';
-import { KEY, COLORS, BACKGROUND, SPRITES, GAME_CONFIG } from './constants.mjs';
+import { KEY, COLORS, BACKGROUND, SPRITES, GAME_CONFIG, RACE_STATE } from './constants.mjs';
 
     var fps            = GAME_CONFIG.fps;         // how many 'update' frames per second
     var step           = 1/fps;                   // how long is each frame (in seconds)
@@ -87,6 +87,7 @@ import { KEY, COLORS, BACKGROUND, SPRITES, GAME_CONFIG } from './constants.mjs';
     });
 
     networkManager.connect("ws://localhost:8080");
+    window.networkManager = networkManager;
 
     Dom.on('chat', 'submit', function(ev) {
       ev.preventDefault();
@@ -140,6 +141,12 @@ import { KEY, COLORS, BACKGROUND, SPRITES, GAME_CONFIG } from './constants.mjs';
     //=========================================================================
 
     function update(dt) {
+
+      // Handle Race State: Block movement unless racing
+      if (networkManager.raceState === RACE_STATE.WAITING || networkManager.raceState === RACE_STATE.COUNTDOWN) {
+        speed = 0;
+        keyFaster = false; // Prevent movement start
+      }
 
       var n, car, carW, sprite, spriteW;
       var playerSegment = findSegment(position+playerZ);
@@ -395,6 +402,37 @@ import { KEY, COLORS, BACKGROUND, SPRITES, GAME_CONFIG } from './constants.mjs';
                         playerSegment.p2.world.y - playerSegment.p1.world.y);
         }
       }
+
+      // Render Race State Overlay
+      if (networkManager.raceState === RACE_STATE.WAITING) {
+         ctx.save();
+         ctx.font = 'bold 36px Arial';
+         ctx.fillStyle = 'white';
+         ctx.strokeStyle = 'black';
+         ctx.lineWidth = 2;
+         ctx.textAlign = 'center';
+         ctx.textBaseline = 'middle';
+
+         const text = "WAITING FOR CHALLENGERS...";
+         // Blink every 800ms
+         if (Math.floor(Date.now() / 800) % 2 === 0) {
+            ctx.fillText(text, width/2, height/3);
+            ctx.strokeText(text, width/2, height/3);
+         }
+         ctx.restore();
+      } else if (networkManager.raceState === RACE_STATE.COUNTDOWN) {
+         ctx.save();
+         ctx.font = 'bold 72px Arial';
+         ctx.fillStyle = '#ff0000';
+         ctx.strokeStyle = 'black';
+         ctx.lineWidth = 3;
+         ctx.textAlign = 'center';
+         ctx.textBaseline = 'middle';
+         ctx.fillText("GET READY", width/2, height/3);
+         ctx.strokeText("GET READY", width/2, height/3);
+         ctx.restore();
+      }
+
     }
 
     function findSegment(z) {
