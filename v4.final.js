@@ -69,6 +69,18 @@ import { KEY, COLORS, BACKGROUND, SPRITES, GAME_CONFIG, RACE_STATE } from './con
       onRoomList: renderRoomList,
       onPlayerJoin: (id, p) => console.log(`Player joined: ${p.name}`),
       onPlayerLeave: (id) => console.log(`Player left: ${id}`),
+      onWelcome: (data) => {
+        if (data.seed) {
+          Util.setSeed(data.seed);
+          // Regenerate world with shared seed
+          reset(GAME_CONFIG);
+        }
+      },
+      onCorrection: (data) => {
+        speed   = data.speed;
+        position = data.z;
+        playerX = data.x;
+      },
       onChat: (data) => {
         const ul = Dom.get('chat_messages');
         const li = document.createElement('li');
@@ -586,18 +598,18 @@ import { KEY, COLORS, BACKGROUND, SPRITES, GAME_CONFIG, RACE_STATE } from './con
       addSprite(segments.length - 25, SPRITES.BILLBOARD06,  1.2);
 
       for(n = 10 ; n < 200 ; n += 4 + Math.floor(n/100)) {
-        addSprite(n, SPRITES.PALM_TREE, 0.5 + Math.random()*0.5);
-        addSprite(n, SPRITES.PALM_TREE,   1 + Math.random()*2);
+        addSprite(n, SPRITES.PALM_TREE, 0.5 + Util.random()*0.5);
+        addSprite(n, SPRITES.PALM_TREE,   1 + Util.random()*2);
       }
 
       for(n = 250 ; n < 1000 ; n += 5) {
         addSprite(n,     SPRITES.COLUMN, 1.1);
-        addSprite(n + Util.randomInt(0,5), SPRITES.TREE1, -1 - (Math.random() * 2));
-        addSprite(n + Util.randomInt(0,5), SPRITES.TREE2, -1 - (Math.random() * 2));
+        addSprite(n + Util.randomInt(0,5), SPRITES.TREE1, -1 - (Util.random() * 2));
+        addSprite(n + Util.randomInt(0,5), SPRITES.TREE2, -1 - (Util.random() * 2));
       }
 
       for(n = 200 ; n < segments.length ; n += 3) {
-        addSprite(n, Util.randomChoice(SPRITES.PLANTS), Util.randomChoice([1,-1]) * (2 + Math.random() * 5));
+        addSprite(n, Util.randomChoice(SPRITES.PLANTS), Util.randomChoice([1,-1]) * (2 + Util.random() * 5));
       }
 
       var side, sprite, offset;
@@ -606,7 +618,7 @@ import { KEY, COLORS, BACKGROUND, SPRITES, GAME_CONFIG, RACE_STATE } from './con
         addSprite(n + Util.randomInt(0, 50), Util.randomChoice(SPRITES.BILLBOARDS), -side);
         for(i = 0 ; i < 20 ; i++) {
           sprite = Util.randomChoice(SPRITES.PLANTS);
-          offset = side * (1.5 + Math.random());
+          offset = side * (1.5 + Util.random());
           addSprite(n + Util.randomInt(0, 50), sprite, offset);
         }
           
@@ -618,10 +630,10 @@ import { KEY, COLORS, BACKGROUND, SPRITES, GAME_CONFIG, RACE_STATE } from './con
       cars = [];
       var n, car, segment, offset, z, sprite, speed;
       for (n = 0 ; n < totalCars ; n++) {
-        offset = Math.random() * Util.randomChoice([-0.8, 0.8]);
-        z      = Math.floor(Math.random() * segments.length) * segmentLength;
+        offset = Util.random() * Util.randomChoice([-0.8, 0.8]);
+        z      = Math.floor(Util.random() * segments.length) * segmentLength;
         sprite = Util.randomChoice(SPRITES.CARS);
-        speed  = maxSpeed/4 + Math.random() * maxSpeed/(sprite == SPRITES.SEMI ? 4 : 2);
+        speed  = maxSpeed/4 + Util.random() * maxSpeed/(sprite == SPRITES.SEMI ? 4 : 2);
         car = new Rival({ offset: offset, z: z, sprite: sprite, speed: speed });
         segment = findSegment(car.z);
         segment.cars.push(car);

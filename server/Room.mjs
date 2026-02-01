@@ -6,6 +6,7 @@ export class Room {
     this.clients = new Set();
     this.state = RACE_STATE.WAITING;
     this.countdownTimer = null;
+    this.seed = Math.floor(Math.random() * 2147483647);
   }
 
   add(client) {
@@ -27,6 +28,7 @@ export class Room {
       id: client.id,
       room: this.id,
       state: this.state,
+      seed: this.seed,
       players: players
     });
 
@@ -80,22 +82,37 @@ export class Room {
 
   handleMessage(client, message) {
     if (message.type === MSG.UPDATE) {
+      let speed = message.speed ?? client.state.speed;
+      let x = message.x ?? client.state.x;
+      let z = message.z ?? client.state.z;
+      let corrected = false;
+
       // Validate Speed
-      const speed = message.speed ?? client.state.speed;
       if (Math.abs(speed) > GAME_CONFIG.maxSpeed * 1.1) {
-        return; // Ignore invalid speed
+        speed = (speed > 0) ? GAME_CONFIG.maxSpeed : -GAME_CONFIG.maxSpeed;
+        corrected = true;
       }
 
       // Validate X
-      const x = message.x ?? client.state.x;
       if (Math.abs(x) > 3) {
-        return; // Ignore invalid X
+        x = (x > 0) ? 3 : -3;
+        corrected = true;
       }
 
       // Update state
       client.state.x = x;
-      client.state.z = message.z ?? client.state.z;
+      client.state.z = z;
       client.state.speed = speed;
+
+      if (corrected) {
+        // Send Correction to Sender (Authoritative)
+        client.send(MSG.UPDATE, {
+           id: client.id,
+           x: client.state.x,
+           z: client.state.z,
+           speed: client.state.speed
+        });
+      }
 
       // Broadcast to others
       this.broadcast(client, MSG.UPDATE, {
