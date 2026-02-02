@@ -2,7 +2,6 @@
   "name": "base-racers",
   "version": "1.0.0",
   "description": "Base Racers - pseudo-3D racing game",
-  "main": "common.js",
   "scripts": {
     "test": "node --test",
     "server": "node server/index.mjs",

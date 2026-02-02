@@ -1,18 +1,102 @@
-<!DOCTYPE html> 
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <title>Base Racers</title>
+  <title>Base Racers - Select Version</title>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-</head> 
-
-<body> 
-
-  <ul>
-    <li><a href='v1.straight.html'>Version 1 - Straight</a></li>
-    <li><a href='v2.curves.html'>Version 2 - Curves</a></li>
-    <li><a href='v3.hills.html'>Version 3 - Hills</a></li>
-    <li><a href='v4.final.html'>Version 4 - Final</a></li>
-  </ul>
-
-</body> 
+  <link href="common.css" rel="stylesheet" type="text/css" />
+  <style>
+    body {
+        background-color: #333;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        margin: 0;
+        background-image: url('images/background.png');
+        background-size: cover;
+        background-position: center;
+    }
+    #menu {
+        background: rgba(0, 0, 0, 0.85);
+        padding: 3em;
+        border: 4px solid white;
+        text-align: center;
+        box-shadow: 0 0 20px black;
+        color: white;
+        font-family: 'Courier New', Courier, monospace;
+        max-width: 400px;
+        width: 100%;
+    }
+    h1 {
+        color: yellow;
+        text-shadow: 4px 4px 0 black;
+        margin-top: 0;
+        border-bottom: 2px solid white;
+        padding-bottom: 10px;
+        margin-bottom: 30px;
+        font-style: italic;
+        font-size: 2.5em;
+    }
+    ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    li {
+        margin-bottom: 15px;
+    }
+    a.menu-btn {
+        display: block;
+        background: #444;
+        color: white;
+        padding: 15px;
+        text-decoration: none;
+        border: 2px solid #999;
+        font-weight: bold;
+        transition: all 0.1s;
+        text-transform: uppercase;
+        position: relative;
+    }
+    a.menu-btn:hover, a.menu-btn:focus-visible {
+        background: yellow;
+        color: black;
+        border-color: white;
+        transform: scale(1.05);
+        box-shadow: 4px 4px 0 black;
+        z-index: 10;
+        outline: none;
+    }
+    a.menu-btn.primary {
+        background: #009A00;
+        border-color: #10AA10;
+        font-size: 1.2em;
+        padding: 20px;
+    }
+    a.menu-btn.primary:hover, a.menu-btn.primary:focus-visible {
+        background: #10AA10;
+        color: white;
+    }
+    .controls-hint {
+        font-size: 0.8em;
+        color: #ccc;
+        margin-top: 30px;
+        border-top: 1px solid #444;
+        padding-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div id="menu">
+    <h1>BASE RACERS</h1>
+    <ul role="navigation" aria-label="Game Versions">
+      <li><a href="v4.final.html" class="menu-btn primary">Start Game (v4)</a></li>
+      <li><a href="v3.hills.html" class="menu-btn">Hills Demo (v3)</a></li>
+      <li><a href="v2.curves.html" class="menu-btn">Curves Demo (v2)</a></li>
+      <li><a href="v1.straight.html" class="menu-btn">Straight Demo (v1)</a></li>
+    </ul>
+    <div class="controls-hint">
+        <p>Use <kbd>↑</kbd><kbd>↓</kbd><kbd>←</kbd><kbd>→</kbd> to drive</p>
+    </div>
+  </div>
+</body>
 </html>
