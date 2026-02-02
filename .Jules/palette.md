@@ -43,3 +43,7 @@
 ## 2026-02-15 - Implicit Form Submission
 **Learning:** For inputs like chat that need "Enter to submit" behavior, using a semantic `<form>` with a hidden `submit` button is more robust and accessible than custom `keydown` listeners. It handles mobile keyboards ("Go" button) and focus management natively.
 **Action:** Wrap single-input UI patterns in `<form>` tags and listen for the `submit` event instead of `keydown`.
+
+## 2026-02-27 - Global Contextual Shortcuts
+**Learning:** Implementing a global key listener (e.g., "Enter" to chat) that intelligently respects the current focus state (ignoring other inputs) and application state (only when game is active) allows for seamless mode switching without explicit UI toggles.
+**Action:** Use global `keydown` listeners with strict target/state checks to shortcut access to primary secondary actions (like chat or search).

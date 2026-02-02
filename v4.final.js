@@ -112,6 +112,19 @@ import { KEY, COLORS, BACKGROUND, SPRITES, GAME_CONFIG, RACE_STATE } from './con
       }
     });
 
+    // Global shortcut to focus chat
+    Dom.on(document, 'keydown', function(ev) {
+      if (ev.key === 'Enter' && !ev.defaultPrevented) {
+        const target = ev.target;
+        const isInteractive = ['INPUT', 'SELECT', 'TEXTAREA', 'BUTTON', 'A'].includes(target.tagName);
+        // Only focus chat if we're in-game (login hidden) and not busy with another control
+        if (!isInteractive && Dom.get('login').style.display === 'none') {
+           ev.preventDefault();
+           Dom.get('chat_input').focus();
+        }
+      }
+    });
+
     Dom.on('login', 'submit', function(ev) {
       ev.preventDefault();
       const name = Dom.get('input_name').value || 'Racer X';
