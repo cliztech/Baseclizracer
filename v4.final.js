@@ -52,6 +52,12 @@ import { KEY, COLORS, BACKGROUND, SPRITES, GAME_CONFIG, RACE_STATE } from './con
     var currentLapTime = 0;                       // current lap time
     var lastLapTime    = null;                    // last lap time
 
+    var totalLaps      = 3;                       // total laps to win
+    var lapCount       = 0;                       // current lap count
+    var totalTime      = 0;                       // total race time
+    var finished       = false;                   // did we finish?
+    var leaderboard    = [];                      // finish results
+
     var keyLeft        = false;
     var keyRight       = false;
     var keyFaster      = false;
@@ -80,6 +86,18 @@ import { KEY, COLORS, BACKGROUND, SPRITES, GAME_CONFIG, RACE_STATE } from './con
         speed   = data.speed;
         position = data.z;
         playerX = data.x;
+      },
+      onPlayerFinished: (data) => {
+        // Find name
+        let name = 'Unknown';
+        if (data.id === networkManager.id) {
+           name = Dom.get('input_name').value || 'Me';
+        } else if (networkManager.remotePlayers[data.id]) {
+           name = networkManager.remotePlayers[data.id].name;
+        }
+        leaderboard.push({ ...data, name });
+        // Sort by rank
+        leaderboard.sort((a,b) => a.rank - b.rank);
       },
       onChat: (data) => {
         const ul = Dom.get('chat_messages');
@@ -154,10 +172,27 @@ import { KEY, COLORS, BACKGROUND, SPRITES, GAME_CONFIG, RACE_STATE } from './con
 
     function update(dt) {
 
+      // Auto-reset when new race starts
+      if (networkManager.raceState === RACE_STATE.COUNTDOWN && (finished || lapCount > 0)) {
+        lapCount = 0;
+        totalTime = 0;
+        finished = false;
+        leaderboard = [];
+      }
+
       // Handle Race State: Block movement unless racing
       if (networkManager.raceState === RACE_STATE.WAITING || networkManager.raceState === RACE_STATE.COUNTDOWN) {
         speed = 0;
         keyFaster = false; // Prevent movement start
+      } else if (finished) {
+        // Autopilot / Braking after finish
+        keyFaster = false;
+        keySlower = false;
+        keyLeft = false;
+        keyRight = false;
+        speed = Util.accelerate(speed, decel, dt);
+      } else if (networkManager.raceState === RACE_STATE.RACING) {
+        totalTime += dt;
       }
 
       var n, car, carW, sprite, spriteW;
@@ -245,6 +280,13 @@ import { KEY, COLORS, BACKGROUND, SPRITES, GAME_CONFIG, RACE_STATE } from './con
         if (currentLapTime && (startPosition < playerZ)) {
           lastLapTime    = currentLapTime;
           currentLapTime = 0;
+          lapCount++;
+
+          if (lapCount >= totalLaps && !finished) {
+             finished = true;
+             networkManager.send(MSG.FINISH, { time: totalTime });
+          }
+
           if (lastLapTime <= Util.toFloat(Dom.storage.fast_lap_time)) {
             Dom.storage.fast_lap_time = lastLapTime;
             updateHud('fast_lap_time', formatTime(lastLapTime));
@@ -442,6 +484,30 @@ import { KEY, COLORS, BACKGROUND, SPRITES, GAME_CONFIG, RACE_STATE } from './con
          ctx.textBaseline = 'middle';
          ctx.fillText("GET READY", width/2, height/3);
          ctx.strokeText("GET READY", width/2, height/3);
+         ctx.restore();
+      }
+
+      if (finished) {
+         ctx.save();
+         ctx.fillStyle = 'rgba(0,0,0,0.7)';
+         ctx.fillRect(width/4, height/4, width/2, height/2);
+
+         ctx.font = 'bold 36px Arial';
+         ctx.fillStyle = 'white';
+         ctx.textAlign = 'center';
+         ctx.fillText("RACE FINISHED", width/2, height/4 + 50);
+
+         ctx.font = '24px Arial';
+         ctx.textAlign = 'left';
+
+         leaderboard.forEach((entry, i) => {
+            const y = height/4 + 100 + (i * 30);
+            ctx.fillText(`${entry.rank}. ${entry.name}`, width/4 + 20, y);
+            ctx.textAlign = 'right';
+            ctx.fillText(formatTime(entry.time), width*0.75 - 20, y);
+            ctx.textAlign = 'left';
+         });
+
          ctx.restore();
       }
 
@@ -691,6 +757,11 @@ import { KEY, COLORS, BACKGROUND, SPRITES, GAME_CONFIG, RACE_STATE } from './con
       cameraDepth            = 1 / Math.tan((fieldOfView/2) * Math.PI/180);
       playerZ                = (cameraHeight * cameraDepth);
       resolution             = height/480;
+
+      lapCount = 0;
+      totalTime = 0;
+      finished = false;
+      leaderboard = [];
 
       if (options.simulatedLatency !== undefined) networkManager.simulatedLatency = options.simulatedLatency;
       if (options.smoothing !== undefined) networkManager.smoothing = options.smoothing;

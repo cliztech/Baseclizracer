@@ -6,7 +6,9 @@ export class Room {
     this.clients = new Set();
     this.state = RACE_STATE.WAITING;
     this.countdownTimer = null;
+    this.finishTimer = null;
     this.seed = Math.floor(Math.random() * 2147483647);
+    this.results = [];
   }
 
   add(client) {
@@ -66,6 +68,12 @@ export class Room {
     if (this.state === RACE_STATE.COUNTDOWN) {
       clearTimeout(this.countdownTimer);
       this.countdownTimer = null;
+    }
+
+    // Reset results when preparing for a new race
+    if (newState === RACE_STATE.COUNTDOWN) {
+      this.results = [];
+      clearTimeout(this.finishTimer);
     }
 
     this.state = newState;
@@ -136,6 +144,28 @@ export class Room {
         name: client.state.name,
         message: message.message
       });
+    } else if (message.type === MSG.FINISH) {
+      if (this.state !== RACE_STATE.RACING) return;
+      if (this.results.find(r => r.id === client.id)) return; // Already finished
+
+      const rank = this.results.length + 1;
+      const time = message.time;
+
+      const result = { id: client.id, rank, time };
+      this.results.push(result);
+
+      // Broadcast finish to ALL (including sender)
+      this.broadcast(null, MSG.PLAYER_FINISHED, result);
+
+      // Check if everyone has finished
+      // We check if results count equals active client count
+      // (Note: this assumes all connected clients are racing)
+      if (this.results.length >= this.clients.size) {
+        // Start cooldown to reset to lobby
+        this.finishTimer = setTimeout(() => {
+           this.setState(RACE_STATE.WAITING);
+        }, 10000);
+      }
     }
   }
 
