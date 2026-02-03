@@ -12,12 +12,16 @@ export class Room {
   }
 
   add(client) {
+    // Determine spectator status (late joiners are spectators)
+    client.isSpectator = (this.state !== RACE_STATE.WAITING);
+
     // 1. Gather existing players state
     const players = [];
     for (const c of this.clients) {
       players.push({
         id: c.id,
-        ...c.state
+        ...c.state,
+        isSpectator: c.isSpectator
       });
     }
 
@@ -31,14 +35,16 @@ export class Room {
       room: this.id,
       state: this.state,
       seed: this.seed,
-      players: players
+      players: players,
+      isSpectator: client.isSpectator
     });
 
     // 4. Notify others of new player
     this.broadcast(client, MSG.PLAYER_JOIN, {
       id: client.id,
       spriteIndex: client.state.spriteIndex,
-      name: client.state.name
+      name: client.state.name,
+      isSpectator: client.isSpectator
     });
 
     this.checkAutoStart();
@@ -76,6 +82,13 @@ export class Room {
       clearTimeout(this.finishTimer);
     }
 
+    // Reset spectators when returning to lobby
+    if (newState === RACE_STATE.WAITING) {
+      for (const client of this.clients) {
+        client.isSpectator = false;
+      }
+    }
+
     this.state = newState;
     // Broadcast to ALL clients (including sender if any)
     this.broadcast(null, MSG.STATE_UPDATE, { state: this.state });
@@ -90,6 +103,8 @@ export class Room {
 
   handleMessage(client, message) {
     if (message.type === MSG.UPDATE) {
+      if (client.isSpectator) return;
+
       let speed = message.speed ?? client.state.speed;
       let x = message.x ?? client.state.x;
       let z = message.z ?? client.state.z;
