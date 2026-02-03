@@ -12,24 +12,16 @@ export function setupTweakUI(callbacks, { Dom = defaultDom, Util = defaultUtil }
       case 'low':    w = 480;  h = 360; break;
     }
     reset({ width: w, height: h });
-    Dom.blur(ev);
   });
 
-  Dom.on('lanes',          'change', function(ev) { Dom.blur(ev); reset({ lanes:         ev.target.options[ev.target.selectedIndex].value }); });
+  Dom.on('lanes',          'change', function(ev) { reset({ lanes:         ev.target.options[ev.target.selectedIndex].value }); });
   Dom.on('roadWidth',      'input',  function(ev) { reset({ roadWidth:     Util.limit(Util.toInt(ev.target.value), Util.toInt(ev.target.getAttribute('min')), Util.toInt(ev.target.getAttribute('max'))) }); });
-  Dom.on('roadWidth',      'change', function(ev) { Dom.blur(ev); });
   Dom.on('cameraHeight',   'input',  function(ev) { reset({ cameraHeight:  Util.limit(Util.toInt(ev.target.value), Util.toInt(ev.target.getAttribute('min')), Util.toInt(ev.target.getAttribute('max'))) }); });
-  Dom.on('cameraHeight',   'change', function(ev) { Dom.blur(ev); });
   Dom.on('drawDistance',   'input',  function(ev) { reset({ drawDistance:  Util.limit(Util.toInt(ev.target.value), Util.toInt(ev.target.getAttribute('min')), Util.toInt(ev.target.getAttribute('max'))) }); });
-  Dom.on('drawDistance',   'change', function(ev) { Dom.blur(ev); });
   Dom.on('fieldOfView',    'input',  function(ev) { reset({ fieldOfView:   Util.limit(Util.toInt(ev.target.value), Util.toInt(ev.target.getAttribute('min')), Util.toInt(ev.target.getAttribute('max'))) }); });
-  Dom.on('fieldOfView',    'change', function(ev) { Dom.blur(ev); });
   Dom.on('fogDensity',     'input',  function(ev) { reset({ fogDensity:    Util.limit(Util.toInt(ev.target.value), Util.toInt(ev.target.getAttribute('min')), Util.toInt(ev.target.getAttribute('max'))) }); });
-  Dom.on('fogDensity',     'change', function(ev) { Dom.blur(ev); });
   Dom.on('simulatedLatency', 'input', function(ev) { reset({ simulatedLatency: Util.limit(Util.toInt(ev.target.value), Util.toInt(ev.target.getAttribute('min')), Util.toInt(ev.target.getAttribute('max'))) }); });
-  Dom.on('simulatedLatency', 'change', function(ev) { Dom.blur(ev); });
   Dom.on('smoothing',        'input', function(ev) { reset({ smoothing:        Util.limit(Util.toInt(ev.target.value), Util.toInt(ev.target.getAttribute('min')), Util.toInt(ev.target.getAttribute('max'))) }); });
-  Dom.on('smoothing',        'change', function(ev) { Dom.blur(ev); });
 }
 
 export function refreshTweakUI(state, { Dom = defaultDom } = {}) {

@@ -34,6 +34,7 @@ a:hover {
 }
 
 /* Consistent focus styles for all interactive elements */
+#racer:focus-visible,
 a:focus-visible,
 button:focus-visible,
 input:focus-visible,

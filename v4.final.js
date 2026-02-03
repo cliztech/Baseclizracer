@@ -748,7 +748,10 @@ import { KEY, COLORS, BACKGROUND, SPRITES, GAME_CONFIG, RACE_STATE } from './con
       }
     });
 
-    Dom.on('restart', 'click', function() { reset(); });
+    Dom.on('restart', 'click', function() {
+      reset();
+      Dom.get('racer').focus();
+    });
 
     Dom.on('resetSettings', 'click', function() {
       Dom.get('resolution').value = 'high';
