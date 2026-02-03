@@ -18,5 +18,12 @@ module.exports = [
     rules: {
       'no-unused-vars': ['warn', { varsIgnorePattern: '^(KEY|BACKGROUND|Stats)$' }]
     }
+  },
+  {
+    files: ['images/*.js'],
+    rules: {
+      'no-unused-vars': 'off',
+      'no-var': 'off'
+    }
   }
 ];

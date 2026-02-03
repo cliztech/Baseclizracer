@@ -16,6 +16,9 @@ Development
 npm ci       # install dependencies
 npm start    # launch http://localhost:8080/v4.final.html
 npm test     # run unit tests
+npm run build:art    # export sprite sheets into images/ with TexturePacker or Aseprite CLI
+npm run validate:art # verify sprite metadata bounds and palette discipline
+npm run lint:art     # enforce ESLint/Prettier rules on generated metadata
 ```
 
 Incrementally built up in 4 parts:
@@ -119,4 +122,3 @@ project and should not be reproduced.
 >> NOTE: the sprite graphics are placeholder graphics [borrowed](http://pixel.garoux.net/game/44) from the old
 genesis version of outrun and used here as teaching examples. If there are any pixel artists out there who want to 
 provide original art to turn this into a real game please get in touch!
-
