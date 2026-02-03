@@ -1,19 +1,55 @@
 /* global WebSocket */
+export const DEFAULT_COSMETICS = {
+  carSkin: 'factory-red',
+  color: '#ff6b6b'
+};
+
+export function serializePlayerState(state) {
+  const packet = {
+    id: state.id,
+    x: state.x,
+    z: state.z,
+    speed: state.speed,
+    carSkin: state.carSkin || DEFAULT_COSMETICS.carSkin,
+    color: state.color || DEFAULT_COSMETICS.color
+  };
+  return JSON.stringify(packet);
+}
+
+export function deserializePlayerState(payload) {
+  if (!payload) return null;
+  const packet = typeof payload === 'string' ? safeParse(payload) : payload;
+  if (!packet) return null;
+  return {
+    id: packet.id,
+    x: Number(packet.x) || 0,
+    z: Number(packet.z) || 0,
+    speed: Number(packet.speed) || 0,
+    carSkin: packet.carSkin || DEFAULT_COSMETICS.carSkin,
+    color: packet.color || DEFAULT_COSMETICS.color
+  };
+}
+
 export function createSocket(url, onMessage) {
   const ws = new WebSocket(url);
   ws.addEventListener('message', ev => {
-    try {
-      const data = JSON.parse(ev.data);
-      if (onMessage) onMessage(data);
-    } catch {
-      // ignore malformed packets
-    }
+    const data = safeParse(ev.data);
+    if (data && onMessage) onMessage(data);
   });
   return {
     send(data) {
       if (ws.readyState === WebSocket.OPEN) {
-        ws.send(JSON.stringify(data));
+        const payload = typeof data === 'string' ? data : JSON.stringify(data);
+        ws.send(payload);
       }
     }
   };
+}
+
+function safeParse(payload) {
+  try {
+    return JSON.parse(payload);
+  } catch {
+    return null;
+  }
 }
