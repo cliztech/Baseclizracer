@@ -311,13 +311,14 @@ var Render = {
   player: function(ctx, width, height, resolution, roadWidth, sprites, speedPercent, scale, destX, destY, steer, updown) {
 
     var bounce = (1.5 * Math.random() * speedPercent * resolution) * Util.randomChoice([-1,1]);
+    var spriteSet = getPlayerSpriteSet();
     var sprite;
     if (steer < 0)
-      sprite = (updown > 0) ? SPRITES.PLAYER_UPHILL_LEFT : SPRITES.PLAYER_LEFT;
+      sprite = (updown > 0) ? spriteSet.uphillLeft : spriteSet.left;
     else if (steer > 0)
-      sprite = (updown > 0) ? SPRITES.PLAYER_UPHILL_RIGHT : SPRITES.PLAYER_RIGHT;
+      sprite = (updown > 0) ? spriteSet.uphillRight : spriteSet.right;
     else
-      sprite = (updown > 0) ? SPRITES.PLAYER_UPHILL_STRAIGHT : SPRITES.PLAYER_STRAIGHT;
+      sprite = (updown > 0) ? spriteSet.uphillStraight : spriteSet.straight;
 
     Render.sprite(ctx, width, height, resolution, roadWidth, sprites, sprite, scale, destX, destY + bounce, -0.5, -1);
   },
@@ -414,3 +415,35 @@ SPRITES.BILLBOARDS = [SPRITES.BILLBOARD01, SPRITES.BILLBOARD02, SPRITES.BILLBOAR
 SPRITES.PLANTS     = [SPRITES.TREE1, SPRITES.TREE2, SPRITES.DEAD_TREE1, SPRITES.DEAD_TREE2, SPRITES.PALM_TREE, SPRITES.BUSH1, SPRITES.BUSH2, SPRITES.CACTUS, SPRITES.STUMP, SPRITES.BOULDER1, SPRITES.BOULDER2, SPRITES.BOULDER3];
 SPRITES.CARS       = [SPRITES.CAR01, SPRITES.CAR02, SPRITES.CAR03, SPRITES.CAR04, SPRITES.SEMI, SPRITES.TRUCK];
 
+var playerSpriteSet = {
+  left: SPRITES.PLAYER_LEFT,
+  right: SPRITES.PLAYER_RIGHT,
+  straight: SPRITES.PLAYER_STRAIGHT,
+  uphillLeft: SPRITES.PLAYER_UPHILL_LEFT,
+  uphillRight: SPRITES.PLAYER_UPHILL_RIGHT,
+  uphillStraight: SPRITES.PLAYER_UPHILL_STRAIGHT
+};
+
+function getPlayerSpriteSet() {
+  return playerSpriteSet;
+}
+
+function setPlayerSpriteSet(nextSet) {
+  if (!nextSet)
+    return;
+  playerSpriteSet = {
+    left: nextSet.left || SPRITES.PLAYER_LEFT,
+    right: nextSet.right || SPRITES.PLAYER_RIGHT,
+    straight: nextSet.straight || SPRITES.PLAYER_STRAIGHT,
+    uphillLeft: nextSet.uphillLeft || SPRITES.PLAYER_UPHILL_LEFT,
+    uphillRight: nextSet.uphillRight || SPRITES.PLAYER_UPHILL_RIGHT,
+    uphillStraight: nextSet.uphillStraight || SPRITES.PLAYER_UPHILL_STRAIGHT
+  };
+}
+
+if (typeof globalThis !== 'undefined') {
+  globalThis.PlayerSpriteController = {
+    get: getPlayerSpriteSet,
+    set: setPlayerSpriteSet
+  };
+}

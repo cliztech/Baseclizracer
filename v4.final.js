@@ -1,6 +1,7 @@
 /* eslint-disable */
 import { setupTweakUI, refreshTweakUI } from "./tweak-ui.mjs";
 import { createSocket } from "./net.mjs";
+import { CAR_LIBRARY, DEFAULT_CAR_ID, LEVEL_ROTATION, createLevelRotation, findCarById } from "./game-config.mjs";
     var fps            = 60;                      // how many 'update' frames per second
     var step           = 1/fps;                   // how long is each frame (in seconds)
     var width          = 1024;                    // logical canvas width
@@ -43,6 +44,12 @@ import { createSocket } from "./net.mjs";
     var totalCars      = 200;                     // total number of cars on the road
     var currentLapTime = 0;                       // current lap time
     var lastLapTime    = null;                    // last lap time
+    var baseCentrifugal = centrifugal;
+    var baseStats      = {};
+    var selectedTrack  = 'rotation';
+    var rotationState  = createLevelRotation();
+    var activeTrackId  = null;
+    var currentCar     = findCarById(DEFAULT_CAR_ID);
 
     var keyLeft        = false;
     var keyRight       = false;
@@ -66,7 +73,8 @@ const net = createSocket("ws://localhost:8080", data => { console.log("net", dat
 
       var n, car, carW, sprite, spriteW;
       var playerSegment = findSegment(position+playerZ);
-      var playerW       = SPRITES.PLAYER_STRAIGHT.w * SPRITES.SCALE;
+      var playerSprites = (globalThis.PlayerSpriteController && globalThis.PlayerSpriteController.get && globalThis.PlayerSpriteController.get()) || { straight: SPRITES.PLAYER_STRAIGHT };
+      var playerW       = playerSprites.straight.w * SPRITES.SCALE;
       var speedPercent  = speed/maxSpeed;
       var dx            = dt * 2 * speedPercent; // at top speed, should be able to cross from left to right (-1 to 1) in 1 second
       var startPosition = position;
@@ -149,7 +157,7 @@ const net = createSocket("ws://localhost:8080", data => { console.log("net", dat
 
       updateHud('speed',            5 * Math.round(speed/500));
       updateHud('current_lap_time', formatTime(currentLapTime));
-      net.send({ x: playerX, z: position, speed });
+      net.send({ type: 'state', carId: currentCar.id, trackId: activeTrackId, x: playerX, z: position, speed: speed, lapTime: currentLapTime });
     }
 
     //-------------------------------------------------------------------------
@@ -233,6 +241,48 @@ const net = createSocket("ws://localhost:8080", data => { console.log("net", dat
         return minutes + "." + (seconds < 10 ? "0" : "") + seconds + "." + tenths;
       else
         return seconds + "." + tenths;
+    }
+
+    function resolveSpriteSet(spriteKeys) {
+      var fallback = {
+        left: SPRITES.PLAYER_LEFT,
+        right: SPRITES.PLAYER_RIGHT,
+        straight: SPRITES.PLAYER_STRAIGHT,
+        uphillLeft: SPRITES.PLAYER_UPHILL_LEFT,
+        uphillRight: SPRITES.PLAYER_UPHILL_RIGHT,
+        uphillStraight: SPRITES.PLAYER_UPHILL_STRAIGHT
+      };
+      if (!spriteKeys)
+        return fallback;
+      return {
+        left: SPRITES[spriteKeys.left] || fallback.left,
+        right: SPRITES[spriteKeys.right] || fallback.right,
+        straight: SPRITES[spriteKeys.straight] || fallback.straight,
+        uphillLeft: SPRITES[spriteKeys.uphillLeft] || fallback.uphillLeft,
+        uphillRight: SPRITES[spriteKeys.uphillRight] || fallback.uphillRight,
+        uphillStraight: SPRITES[spriteKeys.uphillStraight] || fallback.uphillStraight
+      };
+    }
+
+    function applyCarSprites(spriteKeys) {
+      var spriteSet = resolveSpriteSet(spriteKeys);
+      if (globalThis.PlayerSpriteController && globalThis.PlayerSpriteController.set)
+        globalThis.PlayerSpriteController.set(spriteSet);
+    }
+
+    function applyCarStats(carDef) {
+      var stats = (carDef && carDef.stats) || { accel: 1, topSpeed: 1, grip: 1 };
+      var gripScale = stats.grip || 1;
+      currentCar = carDef || currentCar;
+      applyCarSprites(carDef && carDef.spriteKeys);
+      maxSpeed     = baseStats.maxSpeed * stats.topSpeed;
+      accel        = baseStats.accel * stats.accel;
+      breaking     = baseStats.breaking * gripScale;
+      decel        = baseStats.decel;
+      offRoadDecel = baseStats.offRoadDecel * gripScale;
+      offRoadLimit = maxSpeed/4;
+      centrifugal  = baseCentrifugal / gripScale;
+      updateSelectionStatus();
     }
 
     //=========================================================================
@@ -420,9 +470,7 @@ const net = createSocket("ws://localhost:8080", data => { console.log("net", dat
       addRoad(num, num, num, -ROAD.CURVE.EASY, -lastY()/segmentLength);
     }
 
-    function resetRoad() {
-      segments = [];
-
+    function buildCoastalRun() {
       addStraight(ROAD.LENGTH.SHORT);
       addLowRollingHills();
       addSCurves();
@@ -441,16 +489,71 @@ const net = createSocket("ws://localhost:8080", data => { console.log("net", dat
       addStraight();
       addSCurves();
       addDownhillToEnd();
+    }
 
-      resetSprites();
-      resetCars();
+    function buildRidgeRally() {
+      addHill(ROAD.LENGTH.MEDIUM, ROAD.HILL.HIGH);
+      addCurve(ROAD.LENGTH.MEDIUM, ROAD.CURVE.HARD, ROAD.HILL.MEDIUM);
+      addSCurves();
+      addLowRollingHills(ROAD.LENGTH.MEDIUM, ROAD.HILL.HIGH);
+      addCurve(ROAD.LENGTH.MEDIUM, -ROAD.CURVE.HARD, ROAD.HILL.MEDIUM);
+      addBumps();
+      addHill(ROAD.LENGTH.LONG, ROAD.HILL.HIGH);
+      addCurve(ROAD.LENGTH.LONG, ROAD.CURVE.MEDIUM, ROAD.HILL.MEDIUM);
+      addSCurves();
+      addDownhillToEnd();
+    }
 
+    function buildSunsetSprint() {
+      addStraight(ROAD.LENGTH.MEDIUM);
+      addStraight(ROAD.LENGTH.LONG);
+      addCurve(ROAD.LENGTH.MEDIUM, ROAD.CURVE.EASY, ROAD.HILL.LOW);
+      addStraight(ROAD.LENGTH.MEDIUM);
+      addLowRollingHills(ROAD.LENGTH.SHORT, ROAD.HILL.LOW);
+      addCurve(ROAD.LENGTH.LONG, -ROAD.CURVE.MEDIUM, ROAD.HILL.LOW);
+      addStraight(ROAD.LENGTH.LONG);
+      addBumps();
+      addDownhillToEnd();
+    }
+
+    var trackBuilders = {
+      'coastal-run': buildCoastalRun,
+      'ridge-rally': buildRidgeRally,
+      'sunset-sprint': buildSunsetSprint
+    };
+
+    function chooseTrackId(options) {
+      var opts = options || {};
+      if (selectedTrack === 'rotation') {
+        if (!activeTrackId || opts.cycleTrack)
+          activeTrackId = rotationState.nextId();
+      }
+      else {
+        activeTrackId = selectedTrack;
+      }
+      return activeTrackId;
+    }
+
+    function applyStartFinishLanes() {
       segments[findSegment(playerZ).index + 2].color = COLORS.START;
       segments[findSegment(playerZ).index + 3].color = COLORS.START;
       for(var n = 0 ; n < rumbleLength ; n++)
         segments[segments.length-1-n].color = COLORS.FINISH;
+    }
+
+    function resetRoad(options) {
+      segments = [];
+
+      var trackId = chooseTrackId(options);
+      var builder = trackBuilders[trackId] || trackBuilders[LEVEL_ROTATION[0].id];
+      builder();
+
+      resetSprites();
+      resetCars();
+      applyStartFinishLanes();
 
       trackLength = segments.length * segmentLength;
+      updateSelectionStatus();
     }
 
     function resetSprites() {
@@ -502,16 +605,104 @@ const net = createSocket("ws://localhost:8080", data => { console.log("net", dat
 
     function resetCars() {
       cars = [];
-      var n, car, segment, offset, z, sprite, speed;
+      var n, car, segment, offset, z, sprite, carSpeed, carDef;
       for (var n = 0 ; n < totalCars ; n++) {
+        carDef = CAR_LIBRARY[n % CAR_LIBRARY.length];
         offset = Math.random() * Util.randomChoice([-0.8, 0.8]);
         z      = Math.floor(Math.random() * segments.length) * segmentLength;
-        sprite = Util.randomChoice(SPRITES.CARS);
-        speed  = maxSpeed/4 + Math.random() * maxSpeed/(sprite == SPRITES.SEMI ? 4 : 2);
-        car = { offset: offset, z: z, sprite: sprite, speed: speed };
+        sprite = SPRITES[carDef.trafficSpriteKey] || Util.randomChoice(SPRITES.CARS);
+        carSpeed  = maxSpeed/4 * carDef.stats.topSpeed + Math.random() * maxSpeed/(carDef.stats.accel > 1 ? 1.8 : 2.2);
+        car = { offset: offset, z: z, sprite: sprite, speed: carSpeed, id: carDef.id, stats: carDef.stats };
         segment = findSegment(car.z);
         segment.cars.push(car);
         cars.push(car);
+      }
+    }
+
+    function getTrackLabel(trackId) {
+      var found = LEVEL_ROTATION.find(function(level) { return level.id === trackId; });
+      return found ? found.label : trackId;
+    }
+
+    function updateSelectionStatus() {
+      var statusDom = Dom.get('selectionStatus');
+      var trackSelect = Dom.get('trackSelect');
+      var carSelect = Dom.get('carSelect');
+      var activeLabel = getTrackLabel(activeTrackId || rotationState.peek());
+      if (statusDom && currentCar) {
+        Dom.set(statusDom, "Car: " + currentCar.name + " (A " + currentCar.stats.accel.toFixed(2) + " / S " + currentCar.stats.topSpeed.toFixed(2) + " / G " + currentCar.stats.grip.toFixed(2) + ") \u00b7 Track: " + activeLabel);
+      }
+      if (trackSelect)
+        trackSelect.value = selectedTrack;
+      if (carSelect)
+        carSelect.value = currentCar.id;
+    }
+
+    function selectCar(carId) {
+      currentCar = findCarById(carId);
+      speed = 0;
+      applyCarStats(currentCar);
+    }
+
+    function initCarSelection() {
+      var select = Dom.get('carSelect');
+      if (!select)
+        return;
+      select.innerHTML = '';
+      CAR_LIBRARY.forEach(function(car) {
+        var option = document.createElement('option');
+        option.value = car.id;
+        option.text = car.name;
+        select.appendChild(option);
+      });
+      select.value = currentCar.id;
+      Dom.on(select, 'change', function(ev) {
+        selectCar(ev.target.value);
+        Dom.blur(ev);
+      });
+    }
+
+    function selectTrack(trackId) {
+      selectedTrack = trackId;
+      if (selectedTrack === 'rotation') {
+        rotationState = createLevelRotation(activeTrackId || LEVEL_ROTATION[0].id);
+        activeTrackId = null;
+        reset({ forceTrackReset: true, cycleTrack: true });
+      }
+      else {
+        rotationState = createLevelRotation(trackId);
+        activeTrackId = trackId;
+        reset({ forceTrackReset: true });
+      }
+      updateSelectionStatus();
+    }
+
+    function initTrackSelection() {
+      var select = Dom.get('trackSelect');
+      var nextButton = Dom.get('nextTrack');
+      if (!select)
+        return;
+      select.innerHTML = '';
+      var rotationOption = document.createElement('option');
+      rotationOption.value = 'rotation';
+      rotationOption.text = 'Demo Rotation';
+      select.appendChild(rotationOption);
+      LEVEL_ROTATION.forEach(function(level) {
+        var option = document.createElement('option');
+        option.value = level.id;
+        option.text = level.label;
+        select.appendChild(option);
+      });
+      select.value = selectedTrack;
+      Dom.on(select, 'change', function(ev) {
+        Dom.blur(ev);
+        selectTrack(ev.target.value);
+      });
+      if (nextButton) {
+        Dom.on(nextButton, 'click', function(ev) {
+          Dom.blur(ev);
+          reset({ forceTrackReset: true, cycleTrack: true });
+        });
       }
     }
 
@@ -535,7 +726,9 @@ const net = createSocket("ws://localhost:8080", data => { console.log("net", dat
       ready: function(images) {
         background = images[0];
         sprites    = images[1];
-        reset();
+        initCarSelection();
+        initTrackSelection();
+        reset({ forceTrackReset: true, cycleTrack: true });
         Dom.storage.fast_lap_time = Dom.storage.fast_lap_time || 180;
         updateHud('fast_lap_time', formatTime(Util.toFloat(Dom.storage.fast_lap_time)));
       }
@@ -556,13 +749,19 @@ const net = createSocket("ws://localhost:8080", data => { console.log("net", dat
       cameraDepth            = 1 / Math.tan((fieldOfView/2) * Math.PI/180);
       playerZ                = (cameraHeight * cameraDepth);
       resolution             = height/480;
+      baseStats.maxSpeed     = segmentLength/step;
+      baseStats.accel        = baseStats.maxSpeed/5;
+      baseStats.breaking     = -baseStats.maxSpeed;
+      baseStats.decel        = -baseStats.maxSpeed/5;
+      baseStats.offRoadDecel = -baseStats.maxSpeed/2;
+      baseStats.offRoadLimit = baseStats.maxSpeed/4;
+      applyCarStats(currentCar);
       refreshTweakUI();
 
-      if ((segments.length==0) || (options.segmentLength) || (options.rumbleLength))
-        resetRoad(); // only rebuild road when necessary
+      if ((segments.length==0) || options.forceTrackReset || (options.segmentLength) || (options.rumbleLength))
+        resetRoad(options); // only rebuild road when necessary
     }
 
     //=========================================================================
 
 setupTweakUI();
-

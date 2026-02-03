@@ -20,6 +20,19 @@
     </tr>
     <tr><td id="fps" colspan="2" align="right"></td></tr>
     <tr>
+      <th><label for="carSelect">Car :</label></th>
+      <td>
+        <select id="carSelect" style="width:100%"></select>
+      </td>
+    </tr>
+    <tr>
+      <th><label for="trackSelect">Track :</label></th>
+      <td>
+        <select id="trackSelect"></select>
+        <button id="nextTrack" type="button">Next</button>
+      </td>
+    </tr>
+    <tr>
       <th><label for="resolution">Resolution :</label></th>
       <td>
         <select id="resolution" style="width:100%">
@@ -65,6 +78,7 @@
 
   <div id='instructions'>
     <p>Use the <b>arrow keys</b> to drive the car.</p>
+    <p id="selectionStatus"></p>
   </div>
 
   <div id="racer">
