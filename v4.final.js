@@ -194,7 +194,7 @@ import { KEY, COLORS, BACKGROUND, SPRITES, GAME_CONFIG, RACE_STATE } from './con
       }
 
       // Handle Race State: Block movement unless racing
-      if (networkManager.raceState === RACE_STATE.WAITING || networkManager.raceState === RACE_STATE.COUNTDOWN) {
+      if (networkManager.raceState === RACE_STATE.WAITING || networkManager.raceState === RACE_STATE.COUNTDOWN || networkManager.isSpectator) {
         speed = 0;
         keyFaster = false; // Prevent movement start
       } else if (finished) {
@@ -426,6 +426,8 @@ import { KEY, COLORS, BACKGROUND, SPRITES, GAME_CONFIG, RACE_STATE } from './con
         // Render remote players
         for (const id in networkManager.remotePlayers) {
           var player = networkManager.remotePlayers[id];
+          if (player.isSpectator) continue; // Don't render spectators on track
+
           var rSegment = findSegment(player.z);
           if (rSegment === segment) {
              var rPercent = Util.percentRemaining(player.z, segmentLength);
@@ -497,6 +499,27 @@ import { KEY, COLORS, BACKGROUND, SPRITES, GAME_CONFIG, RACE_STATE } from './con
          ctx.textBaseline = 'middle';
          ctx.fillText("GET READY", width/2, height/3);
          ctx.strokeText("GET READY", width/2, height/3);
+         ctx.restore();
+      }
+
+      if (networkManager.isSpectator) {
+         ctx.save();
+         ctx.font = 'bold 48px Arial';
+         ctx.fillStyle = 'yellow';
+         ctx.strokeStyle = 'black';
+         ctx.lineWidth = 2;
+         ctx.textAlign = 'center';
+         ctx.textBaseline = 'middle';
+         const text = "SPECTATING";
+         const subtext = "WAITING FOR NEXT RACE";
+
+         ctx.fillText(text, width/2, height/4);
+         ctx.strokeText(text, width/2, height/4);
+
+         ctx.font = 'bold 24px Arial';
+         ctx.fillStyle = 'white';
+         ctx.fillText(subtext, width/2, height/4 + 50);
+         ctx.strokeText(subtext, width/2, height/4 + 50);
          ctx.restore();
       }
 

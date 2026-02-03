@@ -31,6 +31,7 @@ export class NetworkManager {
     this.timeSinceLastUpdate = 0;
     this.latency = 0; // Real network latency in ms
     this.raceState = RACE_STATE.WAITING;
+    this.isSpectator = false;
   }
 
   /**
@@ -135,12 +136,20 @@ export class NetworkManager {
       case MSG.WELCOME:
         // Initial room population
         this.id = data.id;
+        this.isSpectator = data.isSpectator || false;
         this.onWelcome(data);
         this.raceState = data.state !== undefined ? data.state : RACE_STATE.WAITING;
         data.players.forEach(p => this._addRemotePlayer(p.id, p));
         break;
       case MSG.STATE_UPDATE:
         this.raceState = data.state;
+        if (this.raceState === RACE_STATE.WAITING) {
+          this.isSpectator = false;
+          // Reset all remote players too so they become visible
+          for (const id in this.remotePlayers) {
+            this.remotePlayers[id].isSpectator = false;
+          }
+        }
         break;
       case MSG.PLAYER_JOIN:
         this._addRemotePlayer(data.id, data);
@@ -177,6 +186,7 @@ export class NetworkManager {
     const sprite = SPRITES.CARS[(data.spriteIndex || 0) % SPRITES.CARS.length];
 
     const player = new RemotePlayer(id, { ...data, sprite });
+    player.isSpectator = data.isSpectator;
     this.remotePlayers[id] = player;
     this.onPlayerJoin(id, player);
   }
