@@ -52,6 +52,18 @@ page (horror!) and, even worse, uses global variables and functions (OMG!).
 If I was building a real game I would have much more structure and organization to the
 code, but since its just a racing game tech demo, I have elected to [KISS](http://en.wikipedia.org/wiki/KISS_principle).
 
+CSS Build Step
+==============
+
+Manual `-moz-` and `-webkit-` prefixes have been removed from `common.css`. Use PostCSS with Autoprefixer during development to add any required vendor prefixes:
+
+```
+npm install
+npm run build:css
+```
+
+Modern browsers handle `box-sizing` and CSS transitions without prefixes, so the build currently outputs the same styles while keeping the option for older targets.
+
 FUTURE
 ======
 

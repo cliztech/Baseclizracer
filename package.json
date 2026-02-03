@@ -1,0 +1,18 @@
+{
+  "name": "baseclizr",
+  "version": "1.0.0",
+  "description": "Javascript Pseudo 3D Racer ==========================",
+  "main": "common.js",
+  "scripts": {
+    "build:css": "postcss common.css -o common.css",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "autoprefixer": "^10.4.21",
+    "postcss-cli": "^11.0.1"
+  }
+}
