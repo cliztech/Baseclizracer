@@ -95,7 +95,7 @@
     var width          = 1024;                    // logical canvas width
     var height         = 768;                     // logical canvas height
     var centrifugal    = 0.3;                     // centrifugal force multiplier when going around curves
-    var offRoadDecel   = 0.99;                    // speed multiplier when off road (e.g. you lose 2% speed each update frame)
+    var offRoadMultiplier = 0.99;                 // speed multiplier when off road (e.g. you lose 2% speed each update frame)
     var skySpeed       = 0.001;                   // background sky layer scroll speed when going around curve (or up hill)
     var hillSpeed      = 0.002;                   // background hill layer scroll speed when going around curve (or up hill)
     var treeSpeed      = 0.003;                   // background tree layer scroll speed when going around curve (or up hill)
@@ -128,7 +128,7 @@
     var accel          =  maxSpeed/5;             // acceleration rate - tuned until it 'felt' right
     var breaking       = -maxSpeed;               // deceleration rate when braking
     var decel          = -maxSpeed/5;             // 'natural' deceleration rate when neither accelerating, nor braking
-    var offRoadDecel   = -maxSpeed/2;             // off road deceleration is somewhere in between
+    var offRoadDeceleration = -maxSpeed/2;        // off road deceleration is somewhere in between
     var offRoadLimit   =  maxSpeed/4;             // limit when off road deceleration no longer applies (e.g. you can always go at least this speed even when off road)
     var totalCars      = 200;                     // total number of cars on the road
     var currentLapTime = 0;                       // current lap time
@@ -181,7 +181,7 @@
       if ((playerX < -1) || (playerX > 1)) {
 
         if (speed > offRoadLimit)
-          speed = Util.accelerate(speed, offRoadDecel, dt);
+          speed = Util.accelerate(speed, offRoadDeceleration, dt);
 
         for(n = 0 ; n < playerSegment.sprites.length ; n++) {
           sprite  = playerSegment.sprites[n];
