@@ -25,10 +25,10 @@ const assets = [
 ];
 
 function loadMetadata(metadataPath, variable) {
-  const sandbox = {};
   const code = fs.readFileSync(metadataPath, 'utf8');
-  vm.createContext(sandbox);
-  vm.runInContext(code, sandbox, { filename: metadataPath });
+  const jsonMatch = code.match(/var\s+\w+\s+=\s+([\s\S]+?);/);
+  if (!jsonMatch) throw new Error(`Could not parse metadata from ${metadataPath}`);
+  const value = JSON.parse(jsonMatch[1]);
 
   const value = sandbox[variable];
   if (!value || typeof value !== 'object') {
