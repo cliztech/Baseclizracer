@@ -1,11 +1,22 @@
-Javascript Pseudo 3D Racer
-==========================
+Base Racers
+===========
 
-An Outrun-style pseudo-3d racing game in HTML5 and Javascript
+Base Racers is an Outrun-style pseudo-3d racing game in HTML5 and Javascript.
+
+*For studio/team guidance, see the [Base Racers Team Playbook](docs/TEAM_PLAYBOOK.md).* 
 
  * [play the game](https://jakesgordon.com/games/racer/)
  * view the [source](https://github.com/jakesgordon/javascript-racer)
- * read about [how it works](https://jakesgordon.com/writing/javascript-racer/)
+* read about [how it works](https://jakesgordon.com/writing/javascript-racer/)
+
+Development
+-----------
+
+```
+npm ci       # install dependencies
+npm start    # launch http://localhost:8080/v4.final.html
+npm test     # run unit tests
+```
 
 Incrementally built up in 4 parts:
 
