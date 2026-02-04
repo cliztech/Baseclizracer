@@ -1,3 +1,5 @@
+/* eslint-disable no-unused-vars */
+// Sprite sheet metadata generated for tooling and kept global for legacy consumers.
 var SPRITES = {
   PALM_TREE:              { x:    5, y:    5, w:  215, h:  540 },
   BILLBOARD08:            { x:  230, y:    5, w:  385, h:  265 },
