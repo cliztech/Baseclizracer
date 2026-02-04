@@ -1,29 +1,18 @@
 import { setupTweakUI, refreshTweakUI } from "./tweak-ui.mjs";
-import { createSocket } from "./net.mjs";
-import { RemotePlayer } from './remote-player.mjs';
+import { NetworkManager } from "./network-manager.mjs";
+import { Rival } from './rival.mjs';
 import { Dom } from './dom.mjs';
 import { Util } from './util.mjs';
 import { Game } from './game.mjs';
 import { Render } from './render.mjs';
-import { KEY, COLORS, BACKGROUND, SPRITES } from './constants.mjs';
+import { Physics } from './physics.mjs';
+import { renderRoomList } from './lobby-ui.mjs';
+import { KEY, COLORS, BACKGROUND, SPRITES, GAME_CONFIG, RACE_STATE } from './constants.mjs';
 
-    const DEFAULTS = {
-      width: 1024,
-      height: 768,
-      roadWidth: 2000,
-      segmentLength: 200,
-      rumbleLength: 3,
-      lanes: 3,
-      fieldOfView: 100,
-      cameraHeight: 1000,
-      drawDistance: 300,
-      fogDensity: 5,
-    };
-
-    var fps            = 60;                      // how many 'update' frames per second
+    var fps            = GAME_CONFIG.fps;         // how many 'update' frames per second
     var step           = 1/fps;                   // how long is each frame (in seconds)
-    var width          = DEFAULTS.width;          // logical canvas width
-    var height         = DEFAULTS.height;         // logical canvas height
+    var width          = GAME_CONFIG.width;       // logical canvas width
+    var height         = GAME_CONFIG.height;      // logical canvas height
     var centrifugal    = 0.3;                     // centrifugal force multiplier when going around curves
     var skySpeed       = 0.001;                   // background sky layer scroll speed when going around curve (or up hill)
     var hillSpeed      = 0.002;                   // background hill layer scroll speed when going around curve (or up hill)
@@ -33,28 +22,27 @@ import { KEY, COLORS, BACKGROUND, SPRITES } from './constants.mjs';
     var treeOffset     = 0;                       // current tree scroll offset
     var segments       = [];                      // array of road segments
     var cars           = [];                      // array of cars on the road
-    var remotePlayers  = {};                      // map of remote players
     var stats          = Game.stats('fps');       // mr.doobs FPS counter
     var canvas         = Dom.get('canvas');       // our canvas...
     var ctx            = canvas.getContext('2d'); // ...and its drawing context
     var background     = null;                    // our background image (loaded below)
     var sprites        = null;                    // our spritesheet (loaded below)
     var resolution     = null;                    // scaling factor to provide resolution independence (computed)
-    var roadWidth      = DEFAULTS.roadWidth;      // actually half the roads width, easier math if the road spans from -roadWidth to +roadWidth
-    var segmentLength  = DEFAULTS.segmentLength;  // length of a single segment
-    var rumbleLength   = DEFAULTS.rumbleLength;   // number of segments per red/white rumble strip
+    var roadWidth      = GAME_CONFIG.roadWidth;   // actually half the roads width, easier math if the road spans from -roadWidth to +roadWidth
+    var segmentLength  = GAME_CONFIG.segmentLength; // length of a single segment
+    var rumbleLength   = GAME_CONFIG.rumbleLength; // number of segments per red/white rumble strip
     var trackLength    = null;                    // z length of entire track (computed)
-    var lanes          = DEFAULTS.lanes;          // number of lanes
-    var fieldOfView    = DEFAULTS.fieldOfView;    // angle (degrees) for field of view
-    var cameraHeight   = DEFAULTS.cameraHeight;   // z height of camera
+    var lanes          = GAME_CONFIG.lanes;       // number of lanes
+    var fieldOfView    = GAME_CONFIG.fieldOfView; // angle (degrees) for field of view
+    var cameraHeight   = GAME_CONFIG.cameraHeight;// z height of camera
     var cameraDepth    = null;                    // z distance camera is from screen (computed)
-    var drawDistance   = DEFAULTS.drawDistance;   // number of segments to draw
+    var drawDistance   = GAME_CONFIG.drawDistance;// number of segments to draw
     var playerX        = 0;                       // player x offset from center of road (-1 to 1 to stay independent of roadWidth)
     var playerZ        = null;                    // player relative z distance from camera (computed)
-    var fogDensity     = DEFAULTS.fogDensity;     // exponential fog density
+    var fogDensity     = GAME_CONFIG.fogDensity;  // exponential fog density
     var position       = 0;                       // current camera Z position (add playerZ to get player's absolute Z position)
     var speed          = 0;                       // current speed
-    var maxSpeed       = segmentLength/step;      // top speed (ensure we can't move more than 1 segment in a single frame to make collision detection easier)
+    var maxSpeed       = GAME_CONFIG.maxSpeed;    // top speed (ensure we can't move more than 1 segment in a single frame to make collision detection easier)
     var accel          =  maxSpeed/5;             // acceleration rate - tuned until it 'felt' right
     var breaking       = -maxSpeed;               // deceleration rate when braking
     var decel          = -maxSpeed/5;             // 'natural' deceleration rate when neither accelerating, nor braking
@@ -63,7 +51,12 @@ import { KEY, COLORS, BACKGROUND, SPRITES } from './constants.mjs';
     var totalCars      = 200;                     // total number of cars on the road
     var currentLapTime = 0;                       // current lap time
     var lastLapTime    = null;                    // last lap time
-    var timeSinceLastUpdate = 0;                  // time since last network update
+
+    var totalLaps      = 3;                       // total laps to win
+    var lapCount       = 0;                       // current lap count
+    var totalTime      = 0;                       // total race time
+    var finished       = false;                   // did we finish?
+    var leaderboard    = [];                      // finish results
 
     var keyLeft        = false;
     var keyRight       = false;
@@ -74,43 +67,108 @@ import { KEY, COLORS, BACKGROUND, SPRITES } from './constants.mjs';
       speed:            { value: null, dom: Dom.get('speed_value')            },
       current_lap_time: { value: null, dom: Dom.get('current_lap_time_value') },
       last_lap_time:    { value: null, dom: Dom.get('last_lap_time_value')    },
-      fast_lap_time:    { value: null, dom: Dom.get('fast_lap_time_value')    }
+      fast_lap_time:    { value: null, dom: Dom.get('fast_lap_time_value')    },
+      latency:          { value: null, dom: Dom.get('latency_value')          }
     }
 
-    var net; // Socket connection deferred until join
+    var networkManager = new NetworkManager({
+      onRoomList: renderRoomList,
+      onPlayerJoin: (id, p) => console.log(`Player joined: ${p.name}`),
+      onPlayerLeave: (id) => console.log(`Player left: ${id}`),
+      onWelcome: (data) => {
+        if (data.seed) {
+          Util.setSeed(data.seed);
+          // Regenerate world with shared seed
+          reset(GAME_CONFIG);
+        }
+      },
+      onCorrection: (data) => {
+        speed   = data.speed;
+        position = data.z;
+        playerX = data.x;
+      },
+      onPlayerFinished: (data) => {
+        // Find name
+        let name = 'Unknown';
+        if (data.id === networkManager.id) {
+           name = Dom.get('input_name').value || 'Me';
+        } else if (networkManager.remotePlayers[data.id]) {
+           name = networkManager.remotePlayers[data.id].name;
+        }
+        leaderboard.push({ ...data, name });
+        // Sort by rank
+        leaderboard.sort((a,b) => a.rank - b.rank);
+      },
+      onChat: (data) => {
+        const ul = Dom.get('chat_messages');
+        const li = document.createElement('li');
+        if (data.id === 'system') {
+          li.classList.add('system');
+          li.innerHTML = data.message;
+        } else {
+          // Sanitize to prevent HTML injection
+          const safeName = data.name.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+          const safeMsg = data.message.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+          li.innerHTML = `<span class='author'>${safeName}:</span> ${safeMsg}`;
+        }
+        ul.appendChild(li);
+        ul.scrollTop = ul.scrollHeight;
+      }
+    });
+
+    networkManager.connect("ws://localhost:8080");
+    window.networkManager = networkManager;
+
+    Dom.on('chat', 'submit', function(ev) {
+      ev.preventDefault();
+      const input = Dom.get('chat_input');
+      const msg = input.value.trim();
+      if (msg) {
+        networkManager.sendChat(msg);
+        input.value = '';
+        input.blur();
+      }
+    });
+
+    // Global shortcut to focus chat
+    Dom.on(document, 'keydown', function(ev) {
+      if (ev.key === 'Enter' && !ev.defaultPrevented) {
+        const target = ev.target;
+        const isInteractive = ['INPUT', 'SELECT', 'TEXTAREA', 'BUTTON', 'A'].includes(target.tagName);
+        // Only focus chat if we're in-game (login hidden) and not busy with another control
+        if (!isInteractive && Dom.get('login').style.display === 'none') {
+           ev.preventDefault();
+           Dom.get('chat_input').focus();
+        }
+      }
+    });
 
     Dom.on('login', 'submit', function(ev) {
       ev.preventDefault();
       const name = Dom.get('input_name').value || 'Racer X';
       const roomId = Dom.get('input_room').value || 'default';
+      const btn = Dom.get('btn_join');
 
-      Dom.hide('login');
+      btn.disabled = true;
+      btn.innerHTML = "<span class='spinner'></span>IGNITING...";
 
-      // Initialize Network
-      net = createSocket("ws://localhost:8080", data => {
-        if (data.type === 'WELCOME') {
-          data.players.forEach(p => addRemotePlayer(p.id, p));
-        } else if (data.type === 'PLAYER_JOIN') {
-          addRemotePlayer(data.id, data);
-        } else if (data.type === 'PLAYER_LEAVE') {
-          delete remotePlayers[data.id];
-        } else if (data.type === 'UPDATE') {
-          if (remotePlayers[data.id]) {
-            remotePlayers[data.id].sync(data);
-          }
-        }
-      });
+      setTimeout(() => {
+        Dom.hide('login');
 
-      // Send join message
-      net.send('JOIN', {
-        roomId: roomId,
-        name: name,
-        spriteIndex: Util.randomInt(0, SPRITES.CARS.length-1)
-      });
+        // Send join message
+        networkManager.join(roomId, name, Util.randomInt(0, SPRITES.CARS.length-1));
 
-      // Store preferred name/room for next time
-      localStorage.setItem('base-racer-name', name);
-      localStorage.setItem('base-racer-room', roomId);
+        // Store preferred name/room for next time
+        localStorage.setItem('base-racer-name', name);
+        localStorage.setItem('base-racer-room', roomId);
+
+        // Move focus to game container for immediate keyboard control
+        Dom.get('racer').focus();
+
+        // Reset button state
+        btn.disabled = false;
+        btn.innerHTML = "IGNITE ENGINE";
+      }, 500);
     });
 
     // Load defaults
@@ -121,24 +179,34 @@ import { KEY, COLORS, BACKGROUND, SPRITES } from './constants.mjs';
       Dom.get('input_room').value = localStorage.getItem('base-racer-room');
     }
 
-    function addRemotePlayer(id, data) {
-      remotePlayers[id] = new RemotePlayer(id, {
-        ...data,
-        sprite: SPRITES.CARS[(data.spriteIndex || 0) % SPRITES.CARS.length]
-      });
-    }
-
-    function updateRemotePlayers(dt) {
-      for (const id in remotePlayers) {
-        remotePlayers[id].update(dt, trackLength);
-      }
-    }
-
     //=========================================================================
     // UPDATE THE GAME WORLD
     //=========================================================================
 
     function update(dt) {
+
+      // Auto-reset when new race starts
+      if (networkManager.raceState === RACE_STATE.COUNTDOWN && (finished || lapCount > 0)) {
+        lapCount = 0;
+        totalTime = 0;
+        finished = false;
+        leaderboard = [];
+      }
+
+      // Handle Race State: Block movement unless racing
+      if (networkManager.raceState === RACE_STATE.WAITING || networkManager.raceState === RACE_STATE.COUNTDOWN || networkManager.isSpectator) {
+        speed = 0;
+        keyFaster = false; // Prevent movement start
+      } else if (finished) {
+        // Autopilot / Braking after finish
+        keyFaster = false;
+        keySlower = false;
+        keyLeft = false;
+        keyRight = false;
+        speed = Util.accelerate(speed, decel, dt);
+      } else if (networkManager.raceState === RACE_STATE.RACING) {
+        totalTime += dt;
+      }
 
       var n, car, carW, sprite, spriteW;
       var playerSegment = findSegment(position+playerZ);
@@ -148,7 +216,7 @@ import { KEY, COLORS, BACKGROUND, SPRITES } from './constants.mjs';
       var startPosition = position;
 
       updateCars(dt, playerSegment, playerW);
-      updateRemotePlayers(dt);
+      networkManager.update(dt, trackLength);
 
       position = Util.increase(position, dt * speed, trackLength);
 
@@ -186,12 +254,31 @@ import { KEY, COLORS, BACKGROUND, SPRITES } from './constants.mjs';
       for(n = 0 ; n < playerSegment.cars.length ; n++) {
         car  = playerSegment.cars[n];
         carW = car.sprite.w * SPRITES.SCALE;
-        if (speed > car.speed) {
-          if (Util.overlap(playerX, playerW, car.offset, carW, 0.8)) {
-            speed    = car.speed * (car.speed/speed);
-            position = Util.increase(car.z, -playerZ, trackLength);
-            break;
-          }
+        const result = Physics.checkCollision(
+          { x: playerX, w: playerW, speed: speed, relativeZ: playerZ, z: position + playerZ },
+          { x: car.offset, w: carW, speed: car.speed, z: car.z },
+          trackLength
+        );
+        if (result) {
+          speed = result.speed;
+          position = result.position;
+          break;
+        }
+      }
+
+      // Check collision with remote players
+      for (const id in networkManager.remotePlayers) {
+        const p = networkManager.remotePlayers[id];
+        const pW = p.sprite.w * SPRITES.SCALE;
+        const result = Physics.checkCollision(
+          { x: playerX, w: playerW, speed: speed, relativeZ: playerZ, z: position + playerZ },
+          { x: p.x, w: pW, speed: p.speed, z: p.z },
+          trackLength
+        );
+        if (result) {
+          speed = result.speed;
+          position = result.position;
+          break;
         }
       }
 
@@ -206,6 +293,13 @@ import { KEY, COLORS, BACKGROUND, SPRITES } from './constants.mjs';
         if (currentLapTime && (startPosition < playerZ)) {
           lastLapTime    = currentLapTime;
           currentLapTime = 0;
+          lapCount++;
+
+          if (lapCount >= totalLaps && !finished) {
+             finished = true;
+             networkManager.send(MSG.FINISH, { time: totalTime });
+          }
+
           if (lastLapTime <= Util.toFloat(Dom.storage.fast_lap_time)) {
             Dom.storage.fast_lap_time = lastLapTime;
             updateHud('fast_lap_time', formatTime(lastLapTime));
@@ -226,13 +320,9 @@ import { KEY, COLORS, BACKGROUND, SPRITES } from './constants.mjs';
 
       updateHud('speed',            5 * Math.round(speed/500));
       updateHud('current_lap_time', formatTime(currentLapTime));
+      updateHud('latency',          networkManager.latency);
 
-      // Network Throttling: Send updates at ~10Hz to save bandwidth
-      timeSinceLastUpdate += dt;
-      if (net && timeSinceLastUpdate > 0.1) {
-        net.send('UPDATE', { x: playerX, z: position, speed });
-        timeSinceLastUpdate = 0;
-      }
+      networkManager.broadcastUpdate(dt, { x: playerX, z: position, speed });
     }
 
     //-------------------------------------------------------------------------
@@ -242,8 +332,10 @@ import { KEY, COLORS, BACKGROUND, SPRITES } from './constants.mjs';
       for(n = 0 ; n < cars.length ; n++) {
         car         = cars[n];
         oldSegment  = findSegment(car.z);
-        car.offset  = car.offset + updateCarOffset(car, oldSegment, playerSegment, playerW);
-        car.z       = Util.increase(car.z, dt * car.speed, trackLength);
+
+        car.checkTraffic(segments, segmentLength, { x: playerX, w: playerW, speed: speed, z: position + playerZ });
+        car.update(dt, trackLength);
+
         car.percent = Util.percentRemaining(car.z, segmentLength); // useful for interpolation during rendering phase
         newSegment  = findSegment(car.z);
         if (oldSegment != newSegment) {
@@ -252,51 +344,6 @@ import { KEY, COLORS, BACKGROUND, SPRITES } from './constants.mjs';
           newSegment.cars.push(car);
         }
       }
-    }
-
-    function updateCarOffset(car, carSegment, playerSegment, playerW) {
-
-      var i, j, dir, segment, otherCar, otherCarW, lookahead = 20, carW = car.sprite.w * SPRITES.SCALE;
-
-      // optimization, dont bother steering around other cars when 'out of sight' of the player
-      if ((carSegment.index - playerSegment.index) > drawDistance)
-        return 0;
-
-      for(i = 1 ; i < lookahead ; i++) {
-        segment = segments[(carSegment.index+i)%segments.length];
-
-        if ((segment === playerSegment) && (car.speed > speed) && (Util.overlap(playerX, playerW, car.offset, carW, 1.2))) {
-          if (playerX > 0.5)
-            dir = -1;
-          else if (playerX < -0.5)
-            dir = 1;
-          else
-            dir = (car.offset > playerX) ? 1 : -1;
-          return dir * 1/i * (car.speed-speed)/maxSpeed; // the closer the cars (smaller i) and the greated the speed ratio, the larger the offset
-        }
-
-        for(j = 0 ; j < segment.cars.length ; j++) {
-          otherCar  = segment.cars[j];
-          otherCarW = otherCar.sprite.w * SPRITES.SCALE;
-          if ((car.speed > otherCar.speed) && Util.overlap(car.offset, carW, otherCar.offset, otherCarW, 1.2)) {
-            if (otherCar.offset > 0.5)
-              dir = -1;
-            else if (otherCar.offset < -0.5)
-              dir = 1;
-            else
-              dir = (car.offset > otherCar.offset) ? 1 : -1;
-            return dir * 1/i * (car.speed-otherCar.speed)/maxSpeed;
-          }
-        }
-      }
-
-      // if no cars ahead, but I have somehow ended up off road, then steer back on
-      if (car.offset < -0.9)
-        return 0.1;
-      else if (car.offset > 0.9)
-        return -0.1;
-      else
-        return 0;
     }
 
     //-------------------------------------------------------------------------
@@ -377,8 +424,10 @@ import { KEY, COLORS, BACKGROUND, SPRITES } from './constants.mjs';
         segment = segments[(baseSegment.index + n) % segments.length];
 
         // Render remote players
-        for (const id in remotePlayers) {
-          var player = remotePlayers[id];
+        for (const id in networkManager.remotePlayers) {
+          var player = networkManager.remotePlayers[id];
+          if (player.isSpectator) continue; // Don't render spectators on track
+
           var rSegment = findSegment(player.z);
           if (rSegment === segment) {
              var rPercent = Util.percentRemaining(player.z, segmentLength);
@@ -422,6 +471,82 @@ import { KEY, COLORS, BACKGROUND, SPRITES } from './constants.mjs';
                         playerSegment.p2.world.y - playerSegment.p1.world.y);
         }
       }
+
+      // Render Race State Overlay
+      if (networkManager.raceState === RACE_STATE.WAITING) {
+         ctx.save();
+         ctx.font = 'bold 36px Arial';
+         ctx.fillStyle = 'white';
+         ctx.strokeStyle = 'black';
+         ctx.lineWidth = 2;
+         ctx.textAlign = 'center';
+         ctx.textBaseline = 'middle';
+
+         const text = "WAITING FOR CHALLENGERS...";
+         // Blink every 800ms
+         if (Math.floor(Date.now() / 800) % 2 === 0) {
+            ctx.fillText(text, width/2, height/3);
+            ctx.strokeText(text, width/2, height/3);
+         }
+         ctx.restore();
+      } else if (networkManager.raceState === RACE_STATE.COUNTDOWN) {
+         ctx.save();
+         ctx.font = 'bold 72px Arial';
+         ctx.fillStyle = '#ff0000';
+         ctx.strokeStyle = 'black';
+         ctx.lineWidth = 3;
+         ctx.textAlign = 'center';
+         ctx.textBaseline = 'middle';
+         ctx.fillText("GET READY", width/2, height/3);
+         ctx.strokeText("GET READY", width/2, height/3);
+         ctx.restore();
+      }
+
+      if (networkManager.isSpectator) {
+         ctx.save();
+         ctx.font = 'bold 48px Arial';
+         ctx.fillStyle = 'yellow';
+         ctx.strokeStyle = 'black';
+         ctx.lineWidth = 2;
+         ctx.textAlign = 'center';
+         ctx.textBaseline = 'middle';
+         const text = "SPECTATING";
+         const subtext = "WAITING FOR NEXT RACE";
+
+         ctx.fillText(text, width/2, height/4);
+         ctx.strokeText(text, width/2, height/4);
+
+         ctx.font = 'bold 24px Arial';
+         ctx.fillStyle = 'white';
+         ctx.fillText(subtext, width/2, height/4 + 50);
+         ctx.strokeText(subtext, width/2, height/4 + 50);
+         ctx.restore();
+      }
+
+      if (finished) {
+         ctx.save();
+         ctx.fillStyle = 'rgba(0,0,0,0.7)';
+         ctx.fillRect(width/4, height/4, width/2, height/2);
+
+         ctx.font = 'bold 36px Arial';
+         ctx.fillStyle = 'white';
+         ctx.textAlign = 'center';
+         ctx.fillText("RACE FINISHED", width/2, height/4 + 50);
+
+         ctx.font = '24px Arial';
+         ctx.textAlign = 'left';
+
+         leaderboard.forEach((entry, i) => {
+            const y = height/4 + 100 + (i * 30);
+            ctx.fillText(`${entry.rank}. ${entry.name}`, width/4 + 20, y);
+            ctx.textAlign = 'right';
+            ctx.fillText(formatTime(entry.time), width*0.75 - 20, y);
+            ctx.textAlign = 'left';
+         });
+
+         ctx.restore();
+      }
+
     }
 
     function findSegment(z) {
@@ -575,18 +700,18 @@ import { KEY, COLORS, BACKGROUND, SPRITES } from './constants.mjs';
       addSprite(segments.length - 25, SPRITES.BILLBOARD06,  1.2);
 
       for(n = 10 ; n < 200 ; n += 4 + Math.floor(n/100)) {
-        addSprite(n, SPRITES.PALM_TREE, 0.5 + Math.random()*0.5);
-        addSprite(n, SPRITES.PALM_TREE,   1 + Math.random()*2);
+        addSprite(n, SPRITES.PALM_TREE, 0.5 + Util.random()*0.5);
+        addSprite(n, SPRITES.PALM_TREE,   1 + Util.random()*2);
       }
 
       for(n = 250 ; n < 1000 ; n += 5) {
         addSprite(n,     SPRITES.COLUMN, 1.1);
-        addSprite(n + Util.randomInt(0,5), SPRITES.TREE1, -1 - (Math.random() * 2));
-        addSprite(n + Util.randomInt(0,5), SPRITES.TREE2, -1 - (Math.random() * 2));
+        addSprite(n + Util.randomInt(0,5), SPRITES.TREE1, -1 - (Util.random() * 2));
+        addSprite(n + Util.randomInt(0,5), SPRITES.TREE2, -1 - (Util.random() * 2));
       }
 
       for(n = 200 ; n < segments.length ; n += 3) {
-        addSprite(n, Util.randomChoice(SPRITES.PLANTS), Util.randomChoice([1,-1]) * (2 + Math.random() * 5));
+        addSprite(n, Util.randomChoice(SPRITES.PLANTS), Util.randomChoice([1,-1]) * (2 + Util.random() * 5));
       }
 
       var side, sprite, offset;
@@ -595,7 +720,7 @@ import { KEY, COLORS, BACKGROUND, SPRITES } from './constants.mjs';
         addSprite(n + Util.randomInt(0, 50), Util.randomChoice(SPRITES.BILLBOARDS), -side);
         for(i = 0 ; i < 20 ; i++) {
           sprite = Util.randomChoice(SPRITES.PLANTS);
-          offset = side * (1.5 + Math.random());
+          offset = side * (1.5 + Util.random());
           addSprite(n + Util.randomInt(0, 50), sprite, offset);
         }
           
@@ -607,11 +732,11 @@ import { KEY, COLORS, BACKGROUND, SPRITES } from './constants.mjs';
       cars = [];
       var n, car, segment, offset, z, sprite, speed;
       for (n = 0 ; n < totalCars ; n++) {
-        offset = Math.random() * Util.randomChoice([-0.8, 0.8]);
-        z      = Math.floor(Math.random() * segments.length) * segmentLength;
+        offset = Util.random() * Util.randomChoice([-0.8, 0.8]);
+        z      = Math.floor(Util.random() * segments.length) * segmentLength;
         sprite = Util.randomChoice(SPRITES.CARS);
-        speed  = maxSpeed/4 + Math.random() * maxSpeed/(sprite == SPRITES.SEMI ? 4 : 2);
-        car = { offset: offset, z: z, sprite: sprite, speed: speed };
+        speed  = maxSpeed/4 + Util.random() * maxSpeed/(sprite == SPRITES.SEMI ? 4 : 2);
+        car = new Rival({ offset: offset, z: z, sprite: sprite, speed: speed });
         segment = findSegment(car.z);
         segment.cars.push(car);
         cars.push(car);
@@ -646,11 +771,14 @@ import { KEY, COLORS, BACKGROUND, SPRITES } from './constants.mjs';
       }
     });
 
-    Dom.on('restart', 'click', function() { reset(); });
+    Dom.on('restart', 'click', function() {
+      reset();
+      Dom.get('racer').focus();
+    });
 
     Dom.on('resetSettings', 'click', function() {
       Dom.get('resolution').value = 'high';
-      reset(DEFAULTS);
+      reset(GAME_CONFIG);
     });
 
     function reset(options) {
@@ -668,7 +796,20 @@ import { KEY, COLORS, BACKGROUND, SPRITES } from './constants.mjs';
       cameraDepth            = 1 / Math.tan((fieldOfView/2) * Math.PI/180);
       playerZ                = (cameraHeight * cameraDepth);
       resolution             = height/480;
-      refreshTweakUI({ lanes, roadWidth, cameraHeight, drawDistance, fieldOfView, fogDensity });
+
+      lapCount = 0;
+      totalTime = 0;
+      finished = false;
+      leaderboard = [];
+
+      if (options.simulatedLatency !== undefined) networkManager.simulatedLatency = options.simulatedLatency;
+      if (options.smoothing !== undefined) networkManager.smoothing = options.smoothing;
+
+      refreshTweakUI({
+        lanes, roadWidth, cameraHeight, drawDistance, fieldOfView, fogDensity,
+        simulatedLatency: networkManager.simulatedLatency,
+        smoothing: networkManager.smoothing
+      });
 
       if ((segments.length==0) || (options.segmentLength) || (options.rumbleLength))
         resetRoad(); // only rebuild road when necessary

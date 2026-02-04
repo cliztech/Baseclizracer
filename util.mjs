@@ -10,11 +10,19 @@ if (typeof window !== 'undefined' && !window.requestAnimationFrame) { // http://
 
 export const Util = {
 
+  _seed:            null,
+  setSeed:          function(seed)              { this._seed = seed ? parseInt(seed) % 2147483647 : null; if (this._seed <= 0) this._seed += 2147483646; },
+  random:           function()                  {
+    if (this._seed === null) return Math.random();
+    this._seed = (this._seed * 16807) % 2147483647;
+    return (this._seed - 1) / 2147483646;
+  },
+
   timestamp:        function()                  { return new Date().getTime();                                    },
   toInt:            function(obj, def)          { if (obj !== null) { var x = parseInt(obj, 10); if (!isNaN(x)) return x; } return Util.toInt(def, 0); },
   toFloat:          function(obj, def)          { if (obj !== null) { var x = parseFloat(obj);   if (!isNaN(x)) return x; } return Util.toFloat(def, 0.0); },
   limit:            function(value, min, max)   { return Math.max(min, Math.min(value, max));                     },
-  randomInt:        function(min, max)          { return Math.round(Util.interpolate(min, max, Math.random()));   },
+  randomInt:        function(min, max)          { return Math.round(Util.interpolate(min, max, Util.random()));   },
   randomChoice:     function(options)           { return options[Util.randomInt(0, options.length-1)];            },
   percentRemaining: function(n, total)          { return (n%total)/total;                                         },
   accelerate:       function(v, accel, dt)      { return v + (accel * dt);                                        },

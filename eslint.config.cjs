@@ -14,7 +14,9 @@ module.exports = [
         requestAnimationFrame: 'readonly',
         Stats: 'readonly',
         setInterval: 'readonly',
+        clearInterval: 'readonly',
         setTimeout: 'readonly',
+        clearTimeout: 'readonly',
         console: 'readonly',
         global: 'readonly',
         require: 'readonly',
@@ -26,6 +28,13 @@ module.exports = [
       'no-unused-vars': ['warn', { varsIgnorePattern: '^(KEY|BACKGROUND|Stats)$' }],
       'no-redeclare': 'error',
       'no-undef': 'error'
+    }
+  },
+  {
+    files: ['images/*.js'],
+    rules: {
+      'no-unused-vars': 'off',
+      'no-var': 'off'
     }
   }
 ];

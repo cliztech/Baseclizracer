@@ -35,3 +35,15 @@
 ## 2026-01-18 - Reset for Playground UIs
 **Learning:** In dense configuration UIs (like the game tweaks), users feel safer exploring extremes when they have a single-click "panic button" to restore known-good state.
 **Action:** Always pair complex "tweak" controls with a global reset action.
+
+## 2026-01-20 - Interactive Lists as Controls
+**Learning:** For selecting items from a list (like game rooms), converting plain `<li>` elements into semantic, keyboard-accessible controls (`tabindex="0"`, `role="button"`) transforms a passive list into an active, screen-reader-friendly menu without complex ARIA widgets.
+**Action:** When list items trigger actions, treat them as buttons or links, ensuring keyboard operability and clear labels.
+
+## 2026-02-15 - Implicit Form Submission
+**Learning:** For inputs like chat that need "Enter to submit" behavior, using a semantic `<form>` with a hidden `submit` button is more robust and accessible than custom `keydown` listeners. It handles mobile keyboards ("Go" button) and focus management natively.
+**Action:** Wrap single-input UI patterns in `<form>` tags and listen for the `submit` event instead of `keydown`.
+
+## 2026-02-27 - Global Contextual Shortcuts
+**Learning:** Implementing a global key listener (e.g., "Enter" to chat) that intelligently respects the current focus state (ignoring other inputs) and application state (only when game is active) allows for seamless mode switching without explicit UI toggles.
+**Action:** Use global `keydown` listeners with strict target/state checks to shortcut access to primary secondary actions (like chat or search).
