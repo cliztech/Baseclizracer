@@ -16,7 +16,15 @@ Development
 npm ci       # install dependencies
 npm start    # launch http://localhost:8080/v4.final.html
 npm test     # run unit tests
+
 ```
+
+Art exports
+-----------
+
+This repo does not currently include an asset exporter or `build:art` task. Art assets
+should be added directly to `/images` until a full art pipeline is
+introduced.
 
 Incrementally built up in 4 parts:
 
