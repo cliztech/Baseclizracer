@@ -139,7 +139,9 @@ async function main() {
   console.log('Art metadata validation passed.');
 }
 
-main().catch((error) => {
-  console.error(error.message);
+try {
+  main();
+} catch (error) {
+  console.error(error);
   process.exit(1);
-});
+}
