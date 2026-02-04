@@ -86,9 +86,10 @@
   <div id="racer" tabindex="0" aria-label="Game screen">
     <div id="hud">
       <span id="speed"            class="hud"><span id="speed_value" class="value">0</span> mph</span>
-      <span id="current_lap_time" class="hud">Time: <span id="current_lap_time_value" class="value">0.0</span></span> 
+      <span id="current_lap_time" class="hud">Time: <span id="current_lap_time_value" class="value">0.0</span></span>
       <span id="last_lap_time"    class="hud">Last Lap: <span id="last_lap_time_value" class="value">0.0</span></span>
       <span id="fast_lap_time"    class="hud">Fastest Lap: <span id="fast_lap_time_value" class="value">0.0</span></span>
+      <span id="tx_status" class="hud"></span>
       <span id="latency"          class="hud">Ping: <span id="latency_value" class="value">0</span>ms</span>
     </div>
     <canvas id="canvas">
@@ -129,7 +130,9 @@
   <button id="mute" type="button" aria-label="Mute music"></button>
 
   <script src="stats.js"></script>
-  <script src="common.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+  <script src="config.js"></script>
+  <script src="web3.js"></script>
   <script>
 
     var fps            = 60;                      // how many 'update' frames per second
@@ -259,6 +262,9 @@
         if (currentLapTime && (startPosition < playerZ)) {
           lastLapTime    = currentLapTime;
           currentLapTime = 0;
+          if (typeof Web3Race !== 'undefined') {
+            Web3Race.submitLap(Math.round(lastLapTime * 1000));
+          }
           if (lastLapTime <= Util.toFloat(Dom.storage.fast_lap_time)) {
             Dom.storage.fast_lap_time = lastLapTime;
             updateHud('fast_lap_time', formatTime(lastLapTime));
