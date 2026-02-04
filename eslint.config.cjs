@@ -29,5 +29,12 @@ module.exports = [
       'no-redeclare': 'error',
       'no-undef': 'error'
     }
+  },
+  {
+    files: ['images/*.js'],
+    rules: {
+      'no-unused-vars': 'off',
+      'no-var': 'off'
+    }
   }
 ];
