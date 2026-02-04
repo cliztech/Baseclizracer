@@ -1,20 +1,29 @@
 {
+  "name": "baseclizr",
+  "version": "1.0.0",
+  "description": "Javascript Pseudo 3D Racer ==========================",
+  "main": "common.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
   "name": "base-racers",
   "version": "1.0.0",
   "description": "Base Racers - pseudo-3D racing game",
   "main": "common.js",
   "scripts": {
     "test": "node --test",
-    "server": "node server.js",
-    "start": "http-server .",
-    "lint:art": "prettier --check \"images/{background,sprites}.js\" && eslint \"images/{background,sprites}.js\"",
-    "validate:art": "node tools/art/validate-sprites.mjs",
-    "build:art": "node tools/art/export-art.mjs && npm run validate:art && npm run lint:art"
+    "server": "node server/index.mjs",
+    "start": "http-server ."
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
+  "dependencies": {
+    "@openzeppelin/contracts": "^5.4.0"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^6.1.0",
+    "hardhat": "^2.26.2"
   "devDependencies": {
     "@eslint/js": "^9.35.0",
     "eslint": "^9.35.0",

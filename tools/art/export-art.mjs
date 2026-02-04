@@ -117,7 +117,7 @@ async function writeMetadataJs(jsonPath, scriptPath, variable) {
 
 async function runTexturePacker(exporter, task) {
   const files = await collectPngs(task.sourceDir, task.include);
-  const metadataPath = path.join(os.tmpdir(), `${task.name}-metadata.json`);
+  const metadataPath = path.join(os.tmpdir(), `${task.name}-metadata-${Date.now()}-${process.pid}.json`);
   const args = [
     '--data',
     metadataPath,

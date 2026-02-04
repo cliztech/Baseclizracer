@@ -26,9 +26,9 @@ const assets = [
 
 function loadMetadata(metadataPath, variable) {
   const code = fs.readFileSync(metadataPath, 'utf8');
-  const prefix = 'var ' + variable + ' = ';
-  const jsonText = code.substring(code.indexOf(prefix) + prefix.length).trim().replace(/;$/, '');
-  const sandbox = { [variable]: JSON.parse(jsonText) };
+  const jsonMatch = code.match(/var\s+\w+\s+=\s+([\s\S]+?);/);
+  if (!jsonMatch) throw new Error(`Could not parse metadata from ${metadataPath}`);
+  const value = JSON.parse(jsonMatch[1]);
 
   const value = sandbox[variable];
   if (!value || typeof value !== 'object') {
@@ -139,9 +139,7 @@ async function main() {
   console.log('Art metadata validation passed.');
 }
 
-try {
-  main();
-} catch (error) {
-  console.error(error);
+main().catch((error) => {
+  console.error(error.message);
   process.exit(1);
-}
+});
