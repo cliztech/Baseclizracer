@@ -36,5 +36,12 @@ module.exports = [
       'no-unused-vars': 'off',
       'no-var': 'off'
     }
+  },
+  {
+    files: ['images/*.js'],
+    rules: {
+      'no-unused-vars': 'off',
+      'no-var': 'off'
+    }
   }
 ];

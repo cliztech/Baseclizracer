@@ -16,7 +16,9 @@ Development
 npm ci       # install dependencies
 npm start    # launch http://localhost:8080/v4.final.html
 npm test     # run unit tests
-
+npm run build:art    # export sprite sheets into images/ with TexturePacker or Aseprite CLI
+npm run validate:art # verify sprite metadata bounds and palette discipline
+npm run lint:art     # enforce ESLint/Prettier rules on generated metadata
 ```
 
 Art exports
