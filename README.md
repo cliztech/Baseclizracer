@@ -22,9 +22,9 @@ npm test     # run unit tests
 Art exports
 -----------
 
-This repo does not currently include an asset exporter or `build:art` task. Aseprite
-exports are not supported yet; add art assets directly to `/images` until a pipeline
-is introduced.
+This repo does not currently include an asset exporter or `build:art` task. Art assets
+should be added directly to `/images` until a full art pipeline is
+introduced.
 
 Incrementally built up in 4 parts:
 
