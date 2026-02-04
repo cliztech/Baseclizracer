@@ -1,13 +1,15 @@
 <!DOCTYPE html> 
 
-<html>
+<html lang="en">
 <head>
-  <title>Javascript Racer - v4 (final)</title>
+  <title>Base Racers - v4 (final)</title>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
   <link href="common.css" rel="stylesheet" type="text/css" />
 </head> 
 
 <body> 
+
+  <a class="skip-link" href="#racer">Skip to game</a>
 
   <table id="controls">
     <tr>
@@ -15,7 +17,7 @@
         <a href='v1.straight.html'>straight</a> |
         <a href='v2.curves.html'>curves</a>     |
         <a href='v3.hills.html'>hills</a>       |
-        <a href='v4.final.html'>final</a>
+        <a href='v4.final.html' aria-current="page">final</a>
       </td>
     </tr>
     <tr><td id="fps" colspan="2" align="right"></td></tr>
@@ -61,33 +63,76 @@
       <th><label for="fogDensity">Fog Density (<span id="currentFogDensity"></span>) :</label></th>
       <td><input id="fogDensity" type='range' min='0' max='50' title="integer (0-50)"></td>
     </tr>
+    <tr>
+      <th><label for="simulatedLatency">Network Latency (<span id="currentSimulatedLatency"></span>ms) :</label></th>
+      <td><input id="simulatedLatency" type='range' min='0' max='1000' step='50' value="0" title="integer (0-1000)"></td>
+    </tr>
+    <tr>
+      <th><label for="smoothing">Net Smoothing (<span id="currentSmoothing"></span>) :</label></th>
+      <td><input id="smoothing" type='range' min='1' max='30' value="10" title="integer (1-30)"></td>
+    </tr>
+    <tr>
+      <th>Actions :</th>
+      <td><button id="restart" aria-keyshortcuts="r">Restart Race</button><button id="resetSettings">Reset Settings</button></td>
+    </tr>
   </table>
 
   <div id='instructions'>
-    <p>Use the <b>arrow keys</b> to drive the car.</p>
+    <p>Use <kbd>↑</kbd> <kbd>↓</kbd> <kbd>←</kbd> <kbd>→</kbd> or <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> to drive.</p>
+    <p>Press <kbd>R</kbd> to restart.</p>
+    <p>Press <kbd>Enter</kbd> to chat.</p>
   </div>
 
-  <div id="racer">
+  <div id="racer" tabindex="0" aria-label="Game screen">
     <div id="hud">
       <span id="speed"            class="hud"><span id="speed_value" class="value">0</span> mph</span>
-      <span id="current_lap_time" class="hud">Time: <span id="current_lap_time_value" class="value">0.0</span></span> 
+      <span id="current_lap_time" class="hud">Time: <span id="current_lap_time_value" class="value">0.0</span></span>
       <span id="last_lap_time"    class="hud">Last Lap: <span id="last_lap_time_value" class="value">0.0</span></span>
       <span id="fast_lap_time"    class="hud">Fastest Lap: <span id="fast_lap_time_value" class="value">0.0</span></span>
+      <span id="tx_status" class="hud"></span>
+      <span id="latency"          class="hud">Ping: <span id="latency_value" class="value">0</span>ms</span>
     </div>
     <canvas id="canvas">
       Sorry, this example cannot be run because your browser does not support the &lt;canvas&gt; element
     </canvas>
-    Loading...
+
+    <form id="chat" action="#">
+      <ul id="chat_messages" aria-live="polite" role="log"></ul>
+      <label for="chat_input" class="visually-hidden">Chat message</label>
+      <input type="text" id="chat_input" placeholder="Press Enter to chat..." maxlength="140" autocomplete="off">
+      <button type="submit" hidden>Send</button>
+    </form>
+
+    <div id="loading"><span class="spinner"></span>Loading...</div>
+
+    <form id="login" autocomplete="on">
+      <h2>DRIVER'S LICENSE</h2>
+      <div class="field">
+        <label for="input_name">CALL SIGN</label>
+        <input type="text" id="input_name" name="nickname" maxlength="12" placeholder="MAVERICK" value="Racer X" autocomplete="nickname">
+      </div>
+      <div class="field">
+        <label for="input_room">FREQUENCY</label>
+        <input type="text" id="input_room" name="room" maxlength="12" placeholder="DEFAULT" value="default" autocomplete="off">
+      </div>
+      <div id="room_browser">
+        <h3>DETECTED FREQUENCIES</h3>
+        <ul id="room_list"></ul>
+      </div>
+      <button id="btn_join" type="submit">IGNITE ENGINE</button>
+    </form>
   </div>
 
   <audio id='music'>
     <source src="music/racer.ogg">
     <source src="music/racer.mp3">
   </audio>
-  <span id="mute"></span>
+  <button id="mute" type="button" aria-label="Mute music"></button>
 
   <script src="stats.js"></script>
-  <script src="common.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+  <script src="config.js"></script>
+  <script src="web3.js"></script>
   <script>
 
     var fps            = 60;                      // how many 'update' frames per second
@@ -95,7 +140,7 @@
     var width          = 1024;                    // logical canvas width
     var height         = 768;                     // logical canvas height
     var centrifugal    = 0.3;                     // centrifugal force multiplier when going around curves
-    var offRoadDecel   = 0.99;                    // speed multiplier when off road (e.g. you lose 2% speed each update frame)
+    var offRoadMultiplier = 0.99;                 // speed multiplier when off road (e.g. you lose 2% speed each update frame)
     var skySpeed       = 0.001;                   // background sky layer scroll speed when going around curve (or up hill)
     var hillSpeed      = 0.002;                   // background hill layer scroll speed when going around curve (or up hill)
     var treeSpeed      = 0.003;                   // background tree layer scroll speed when going around curve (or up hill)
@@ -128,7 +173,7 @@
     var accel          =  maxSpeed/5;             // acceleration rate - tuned until it 'felt' right
     var breaking       = -maxSpeed;               // deceleration rate when braking
     var decel          = -maxSpeed/5;             // 'natural' deceleration rate when neither accelerating, nor braking
-    var offRoadDecel   = -maxSpeed/2;             // off road deceleration is somewhere in between
+    var offRoadDeceleration = -maxSpeed/2;        // off road deceleration is somewhere in between
     var offRoadLimit   =  maxSpeed/4;             // limit when off road deceleration no longer applies (e.g. you can always go at least this speed even when off road)
     var totalCars      = 200;                     // total number of cars on the road
     var currentLapTime = 0;                       // current lap time
@@ -181,7 +226,7 @@
       if ((playerX < -1) || (playerX > 1)) {
 
         if (speed > offRoadLimit)
-          speed = Util.accelerate(speed, offRoadDecel, dt);
+          speed = Util.accelerate(speed, offRoadDeceleration, dt);
 
         for(n = 0 ; n < playerSegment.sprites.length ; n++) {
           sprite  = playerSegment.sprites[n];
@@ -217,6 +262,9 @@
         if (currentLapTime && (startPosition < playerZ)) {
           lastLapTime    = currentLapTime;
           currentLapTime = 0;
+          if (typeof Web3Race !== 'undefined') {
+            Web3Race.submitLap(Math.round(lastLapTime * 1000));
+          }
           if (lastLapTime <= Util.toFloat(Dom.storage.fast_lap_time)) {
             Dom.storage.fast_lap_time = lastLapTime;
             updateHud('fast_lap_time', formatTime(lastLapTime));
@@ -683,6 +731,7 @@
     //=========================================================================
 
   </script>
+  <script type="module" src="v4.final.js"></script>
 
 </body> 
 </html>

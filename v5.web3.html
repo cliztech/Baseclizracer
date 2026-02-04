@@ -5,9 +5,37 @@
   <title>Javascript Racer - v5 (web3)</title>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
   <link href="common.css" rel="stylesheet" type="text/css" />
-  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
-  <script src="web3.js"></script>
-</head> 
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet" />
+  <style>
+    #sunLayer, #gridLayer {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 640px;
+      height: 480px;
+    }
+    #sunLayer {
+      z-index: -2;
+      background: radial-gradient(circle at center, rgba(255,221,0,0.8), rgba(255,0,128,0.2));
+      animation: sunPulse 6s ease-in-out infinite;
+    }
+    #gridLayer {
+      z-index: -1;
+      background-image: linear-gradient(rgba(0,255,255,0.3) 1px, transparent 1px),
+                        linear-gradient(90deg, rgba(0,255,255,0.3) 1px, transparent 1px);
+      background-size: 40px 40px;
+      animation: gridMove 10s linear infinite;
+    }
+    @keyframes gridMove {
+      from { background-position: 0 0, 0 0; }
+      to   { background-position: 0 40px, 40px 0; }
+    }
+    @keyframes sunPulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+  </style>
+</head>
 
 <body> 
 
@@ -17,23 +45,11 @@
         <a href='v1.straight.html'>straight</a> |
         <a href='v2.curves.html'>curves</a>     |
         <a href='v3.hills.html'>hills</a>       |
-        <a href='v4.final.html'>final</a>
+        <a href='v4.final.html'>final</a>       |
+        <a href='v5.web3.html'>web3</a>
       </td>
     </tr>
     <tr><td id="fps" colspan="2" align="right"></td></tr>
-    <tr>
-      <th>Wallet :</th>
-      <td>
-        <button onclick="connectWallet()">Connect</button>
-        <span id="walletAddress"></span>
-      </td>
-    </tr>
-    <tr>
-      <th>Sign :</th>
-      <td>
-        <button onclick="signPlay()">Sign Play</button>
-      </td>
-    </tr>
     <tr>
       <th><label for="resolution">Resolution :</label></th>
       <td>
@@ -83,9 +99,11 @@
   </div>
 
   <div id="racer">
+    <canvas id="sunLayer"></canvas>
+    <canvas id="gridLayer"></canvas>
     <div id="hud">
       <span id="speed"            class="hud"><span id="speed_value" class="value">0</span> mph</span>
-      <span id="current_lap_time" class="hud">Time: <span id="current_lap_time_value" class="value">0.0</span></span> 
+      <span id="current_lap_time" class="hud">Time: <span id="current_lap_time_value" class="value">0.0</span></span>
       <span id="last_lap_time"    class="hud">Last Lap: <span id="last_lap_time_value" class="value">0.0</span></span>
       <span id="fast_lap_time"    class="hud">Fastest Lap: <span id="fast_lap_time_value" class="value">0.0</span></span>
     </div>
