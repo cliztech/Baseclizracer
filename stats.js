@@ -1,3 +1,4 @@
+/* exported Stats */
 /**
  * @author mrdoob / http://mrdoob.com/
  */
@@ -7,7 +8,7 @@ var Stats = function () {
   var startTime = Date.now(), prevTime = startTime;
   var ms = 0, msMin = 1000, msMax = 0;
   var fps = 0, fpsMin = 1000, fpsMax = 0;
-  var frames = 0, mode = 0;mode
+  var frames = 0, mode = 0;
   var container = document.createElement( 'div' );
   container.id = 'stats';
   container.addEventListener( 'mousedown', function ( event ) { event.preventDefault(); setMode( ++ mode % 2 ) }, false );
@@ -29,12 +30,11 @@ var Stats = function () {
   fpsGraph.style.cssText = 'position:relative;width:74px;height:30px;background-color:#0ff';
   fpsDiv.appendChild( fpsGraph );
 
+  var bar;
   while ( fpsGraph.children.length < 74 ) {
-
-    var bar = document.createElement( 'span' );
+    bar = document.createElement( 'span' );
     bar.style.cssText = 'width:1px;height:30px;float:left;background-color:#113';
     fpsGraph.appendChild( bar );
-
   }
 
   var msDiv = document.createElement( 'div' );
@@ -54,11 +54,9 @@ var Stats = function () {
   msDiv.appendChild( msGraph );
 
   while ( msGraph.children.length < 74 ) {
-
-    var bar = document.createElement( 'span' );
+    bar = document.createElement( 'span' );
     bar.style.cssText = 'width:1px;height:30px;float:left;background-color:#131';
     msGraph.appendChild( bar );
-
   }
 
   var setMode = function ( value ) {
