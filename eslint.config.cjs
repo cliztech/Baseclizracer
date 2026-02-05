@@ -1,6 +1,9 @@
 const js = require('@eslint/js');
 
 module.exports = [
+  {
+    ignores: ['stats.js', 'hardhat.config.js', 'scripts/deploy.js', 'tools/art/validate-sprites.mjs']
+  },
   js.configs.recommended,
   {
     files: ['**/*.js', '**/*.mjs'],
@@ -13,6 +16,7 @@ module.exports = [
         HTMLElement: 'readonly',
         requestAnimationFrame: 'readonly',
         Stats: 'readonly',
+        ethers: 'readonly',
         setInterval: 'readonly',
         clearInterval: 'readonly',
         setTimeout: 'readonly',
@@ -28,13 +32,6 @@ module.exports = [
       'no-unused-vars': ['warn', { varsIgnorePattern: '^(KEY|BACKGROUND|Stats)$' }],
       'no-redeclare': 'error',
       'no-undef': 'error'
-    }
-  },
-  {
-    files: ['images/*.js'],
-    rules: {
-      'no-unused-vars': 'off',
-      'no-var': 'off'
     }
   },
   {

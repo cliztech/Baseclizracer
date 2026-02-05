@@ -1,0 +1,1 @@
+export const CONFIG = { contractAddress: '0x0000000000000000000000000000000000000000' };

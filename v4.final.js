@@ -7,7 +7,8 @@ import { Game } from './game.mjs';
 import { Render } from './render.mjs';
 import { Physics } from './physics.mjs';
 import { renderRoomList } from './lobby-ui.mjs';
-import { KEY, COLORS, BACKGROUND, SPRITES, GAME_CONFIG, RACE_STATE } from './constants.mjs';
+import { KEY, COLORS, BACKGROUND, SPRITES, GAME_CONFIG, RACE_STATE, MSG } from './constants.mjs';
+import { Web3Race } from './web3.mjs';
 
     var fps            = GAME_CONFIG.fps;         // how many 'update' frames per second
     var step           = 1/fps;                   // how long is each frame (in seconds)
@@ -293,6 +294,7 @@ import { KEY, COLORS, BACKGROUND, SPRITES, GAME_CONFIG, RACE_STATE } from './con
         if (currentLapTime && (startPosition < playerZ)) {
           lastLapTime    = currentLapTime;
           currentLapTime = 0;
+          Web3Race.submitLap(Math.round(lastLapTime * 1000));
           lapCount++;
 
           if (lapCount >= totalLaps && !finished) {
