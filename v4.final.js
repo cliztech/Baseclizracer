@@ -609,17 +609,17 @@ const net = createSocket("ws://localhost:8080", data => {
     }
 
     function getPlayerSpriteSheet(skinId, color) {
-      var cacheKey = color ? (skinId + "-" + color) : skinId;
-      if (playerSpriteSheets[cacheKey])
-        return playerSpriteSheets[cacheKey];
-      if (playerSpriteSheets[skinId])
-        return playerSpriteSheets[skinId];
-      if (color) {
-        playerSpriteSheets[cacheKey] = tintSpriteSheet(sprites, buildPaletteSwapTable(BASE_CAR_PALETTE, { custom: { palette: buildPaletteFromColor(color) } }).custom);
-        return playerSpriteSheets[cacheKey];
-      }
-      return playerSpriteSheets.default || sprites;
-    }
+  const cacheKey = color ? (skinId + "-" + color) : skinId;
+  if (playerSpriteSheets[cacheKey])
+    return playerSpriteSheets[cacheKey];
+  if (playerSpriteSheets[skinId])
+    return playerSpriteSheets[skinId];
+  if (color) {
+    playerSpriteSheets[cacheKey] = tintSpriteSheet(sprites, buildPaletteSwapTable(BASE_CAR_PALETTE, { custom: { palette: buildPaletteFromColor(color) } }).custom);
+    return playerSpriteSheets[cacheKey];
+  }
+  return playerSpriteSheets.default || sprites;
+}
 
     function tintSpriteSheet(baseSpritesheet, swapTable) {
       var canvasElement = document.createElement('canvas');
