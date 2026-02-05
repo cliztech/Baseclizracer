@@ -1,7 +1,7 @@
 {
-  "name": "base-racers",
+  "name": "baseclizr",
   "version": "1.0.0",
-  "description": "Base Racers - pseudo-3D racing game",
+  "description": "Javascript Pseudo 3D Racer",
   "main": "common.js",
   "scripts": {
     "test": "node --test",
