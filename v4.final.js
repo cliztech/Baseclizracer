@@ -612,7 +612,7 @@ const net = createSocket("ws://localhost:8080", data => {
       var cacheKey = color ? (skinId + "-" + color) : skinId;
       if (playerSpriteSheets[cacheKey])
         return playerSpriteSheets[cacheKey];
-      if (playerSpriteSheets[skinId])
+      if (Object.prototype.hasOwnProperty.call(playerSpriteSheets, skinId))
         return playerSpriteSheets[skinId];
       if (color) {
         playerSpriteSheets[cacheKey] = tintSpriteSheet(sprites, buildPaletteSwapTable(BASE_CAR_PALETTE, { custom: { palette: buildPaletteFromColor(color) } }).custom);
