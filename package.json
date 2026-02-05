@@ -1,10 +1,4 @@
 {
-  "name": "baseclizr",
-  "version": "1.0.0",
-  "description": "Javascript Pseudo 3D Racer ==========================",
-  "main": "common.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
   "name": "base-racers",
   "version": "1.0.0",
   "description": "Base Racers - pseudo-3D racing game",
@@ -19,19 +13,16 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
-    "@openzeppelin/contracts": "^5.4.0"
+    "@openzeppelin/contracts": "^5.4.0",
+    "ws": "^8.18.3"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox": "^6.1.0",
-    "hardhat": "^2.26.2"
-  "devDependencies": {
+    "hardhat": "^2.26.2",
     "@eslint/js": "^9.35.0",
     "eslint": "^9.35.0",
     "http-server": "^14.1.1",
     "pngjs": "^7.0.0",
     "prettier": "^3.7.4"
-  },
-  "dependencies": {
-    "ws": "^8.18.3"
   }
 }
