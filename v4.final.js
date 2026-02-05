@@ -639,7 +639,8 @@ const net = createSocket("ws://localhost:8080", data => {
     function collectRemotePlayers() {
       var results = [];
       remotePlayers.forEach(function(player) {
-        var worldZ = Util.increase(player.z || 0, 0, trackLength);
+        var worldZ = (player.z || 0) % (trackLength || 1);
+        if (worldZ < 0) worldZ += (trackLength || 1);
         var segmentIndex = Math.floor(worldZ/segmentLength) % segments.length;
         results.push({
           segmentIndex: segmentIndex,
