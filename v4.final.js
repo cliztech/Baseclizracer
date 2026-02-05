@@ -84,7 +84,7 @@ const net = createSocket("ws://localhost:8080", data => {
   if (!parsed || !parsed.id || parsed.id === localPlayerId)
     return;
   parsed.x = Util.limit(parsed.x || 0, -3, 3);
-  parsed.z = parsed.z || 0;
+  parsed.z = (Number(parsed.z) || 0) % (trackLength || 1000000);
   remotePlayers.set(parsed.id, parsed);
 });
 
