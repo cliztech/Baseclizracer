@@ -25,6 +25,13 @@ export class Lobby {
     return this.rooms.get(id);
   }
 
+  removeRoom(id) {
+    if (this.rooms.has(id)) {
+      this.rooms.delete(id);
+      console.log(`Room removed: ${id}`);
+    }
+  }
+
   handleConnection(ws) {
     const client = new Client(ws);
     this.clients.set(ws, client);
@@ -48,7 +55,12 @@ export class Lobby {
     ws.on('close', () => {
       console.log(`Client disconnected: ${client.id}`);
       if (client.room) {
-        client.room.remove(client);
+        const room = client.room;
+        const roomId = room.id;
+        room.remove(client);
+        if (room.clients.size === 0 && roomId !== 'default') {
+          this.removeRoom(roomId);
+        }
       }
       this.clients.delete(ws);
       this.broadcastRoomList();

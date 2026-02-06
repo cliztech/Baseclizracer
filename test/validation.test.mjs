@@ -53,10 +53,14 @@ async function runTest() {
 
     // Test 1: Invalid Speed (Correction)
     console.log('Sending invalid speed...');
-    clientB.send(JSON.stringify({ type: MSG.UPDATE, speed: GAME_CONFIG.maxSpeed * 2 }));
+    // We send 1.5x maxSpeed.
+    // This should pass the schema (max 20000 vs 12000*1.5=18000)
+    // but fail the game logic check (> 1.1x), triggering clamping.
+    const updatePromise = waitForMessage(clientA, MSG.UPDATE);
+    clientB.send(JSON.stringify({ type: MSG.UPDATE, speed: GAME_CONFIG.maxSpeed * 1.5 }));
 
     // Check A receives Clamped UPDATE.
-    let msg = await waitForMessage(clientA, MSG.UPDATE);
+    let msg = await updatePromise;
     assert.strictEqual(msg.speed, GAME_CONFIG.maxSpeed, 'Speed should be clamped to maxSpeed');
     console.log('Invalid speed corrected and broadcast.');
 

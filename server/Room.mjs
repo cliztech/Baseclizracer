@@ -1,4 +1,5 @@
 import { MSG, GAME_CONFIG, RACE_STATE } from '../constants.mjs';
+import { Validator, Messages } from './schema.mjs';
 
 export class Room {
   constructor(id) {
@@ -102,6 +103,13 @@ export class Room {
   }
 
   handleMessage(client, message) {
+    // Validate Message Schema
+    const schema = Messages[message.type];
+    if (schema && !Validator.validate(schema, message)) {
+      // console.warn(`Invalid message from ${client.id}:`, message.type);
+      return;
+    }
+
     if (message.type === MSG.UPDATE) {
       if (client.isSpectator) return;
 
@@ -173,9 +181,8 @@ export class Room {
       this.broadcast(null, MSG.PLAYER_FINISHED, result);
 
       // Check if everyone has finished
-      // We check if results count equals active client count
-      // (Note: this assumes all connected clients are racing)
-      if (this.results.length >= this.clients.size) {
+      const activeRacers = Array.from(this.clients).filter(c => !c.isSpectator);
+      if (this.results.length >= activeRacers.length) {
         // Start cooldown to reset to lobby
         this.finishTimer = setTimeout(() => {
            this.setState(RACE_STATE.WAITING);

@@ -24,9 +24,13 @@ function startServer() {
       env: { ...process.env, PORT }
     });
     serverProcess.stdout.on('data', (data) => {
+      process.stdout.write('[SERVER] ' + data);
       if (data.toString().includes(`Nexus Lobby running on port ${PORT}`)) {
         resolve();
       }
+    });
+    serverProcess.stderr.on('data', (data) => {
+      process.stderr.write('[SERVER ERR] ' + data);
     });
   });
 }
@@ -117,7 +121,10 @@ async function runTest() {
     // Room logic: "if state == COUNTDOWN && clients < 2 -> WAITING".
     // So P3 should get STATE_UPDATE -> WAITING.
 
-    const stateReset = await waitForMessage(p3, MSG.STATE_UPDATE);
+    const stateResetPromise = waitForMessage(p3, MSG.STATE_UPDATE);
+    p1.close();
+    p2.close();
+    const stateReset = await stateResetPromise;
     assert.strictEqual(stateReset.state, RACE_STATE.WAITING, 'Should return to WAITING');
 
     // Wait a moment for local logic to potentially clear flag (client side)
@@ -136,9 +143,9 @@ async function runTest() {
     await waitForMessage(p4, MSG.WELCOME);
 
     // P3 sends update
+    const p4UpdatePromise = waitForMessage(p4, MSG.UPDATE);
     p3.send(JSON.stringify({ type: MSG.UPDATE, x: -0.5, z: 200, speed: 500 }));
 
-    const p4UpdatePromise = waitForMessage(p4, MSG.UPDATE);
     const updateMsg = await Promise.race([
         p4UpdatePromise,
         new Promise(r => setTimeout(() => r(null), 1000))
