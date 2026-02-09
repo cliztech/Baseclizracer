@@ -1,5 +1,4 @@
 import fs from 'node:fs';
-import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import vm from 'node:vm';
 import { PNG } from 'pngjs';
@@ -26,9 +25,9 @@ const assets = [
 
 function loadMetadata(metadataPath, variable) {
   const code = fs.readFileSync(metadataPath, 'utf8');
-  const jsonMatch = code.match(/var\s+\w+\s+=\s+([\s\S]+?);/);
-  if (!jsonMatch) throw new Error(`Could not parse metadata from ${metadataPath}`);
-  const value = JSON.parse(jsonMatch[1]);
+  const sandbox = {};
+  vm.createContext(sandbox);
+  vm.runInContext(code, sandbox);
 
   const value = sandbox[variable];
   if (!value || typeof value !== 'object') {

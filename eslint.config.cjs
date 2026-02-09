@@ -3,7 +3,7 @@ const js = require('@eslint/js');
 module.exports = [
   js.configs.recommended,
   {
-    files: ['**/*.js', '**/*.mjs'],
+    files: ['**/*.js', '**/*.mjs', '**/*.cjs'],
     languageOptions: {
       ecmaVersion: 2022,
       sourceType: 'module',
@@ -21,7 +21,8 @@ module.exports = [
         global: 'readonly',
         require: 'readonly',
         process: 'readonly',
-        localStorage: 'readonly'
+        localStorage: 'readonly',
+        module: 'readonly'
       }
     },
     rules: {
