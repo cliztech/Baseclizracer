@@ -28,7 +28,8 @@ export class Client {
   }
 
   send(type, payload = {}) {
-    if (this.socket.readyState === 1) { // WebSocket.OPEN
+    if (this.socket.readyState === 1) {
+      // WebSocket.OPEN
       this.socket.send(JSON.stringify({ type, ...payload }));
     }
   }

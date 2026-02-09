@@ -27,10 +27,10 @@ const assets = [
 function loadMetadata(metadataPath, variable) {
   const code = fs.readFileSync(metadataPath, 'utf8');
   const jsonMatch = code.match(/var\s+\w+\s+=\s+([\s\S]+?);/);
-  if (!jsonMatch) throw new Error(`Could not parse metadata from ${metadataPath}`);
+  if (!jsonMatch)
+    throw new Error(`Could not parse metadata from ${metadataPath}`);
   const value = JSON.parse(jsonMatch[1]);
 
-  const value = sandbox[variable];
   if (!value || typeof value !== 'object') {
     throw new Error(`${variable} not defined in ${metadataPath}`);
   }
@@ -54,7 +54,9 @@ function validateEntries(name, entries, sheet) {
 
   for (const [key, rect] of Object.entries(entries)) {
     if (!/^[A-Z0-9_]+$/.test(key)) {
-      errors.push(`${name}: invalid key ${key} (use uppercase and underscores).`);
+      errors.push(
+        `${name}: invalid key ${key} (use uppercase and underscores).`
+      );
     }
 
     const numericFields = ['x', 'y', 'w', 'h'];
@@ -75,7 +77,12 @@ function validateEntries(name, entries, sheet) {
       errors.push(`${name}: ${key} has non-positive dimensions.`);
     }
 
-    if (rect.x < 0 || rect.y < 0 || rect.x + rect.w > width || rect.y + rect.h > height) {
+    if (
+      rect.x < 0 ||
+      rect.y < 0 ||
+      rect.x + rect.w > width ||
+      rect.y + rect.h > height
+    ) {
       errors.push(`${name}: ${key} exceeds sheet bounds (${width}x${height}).`);
     }
   }
@@ -87,16 +94,23 @@ function validatePalette(name, sheet, palettePath) {
   const errors = [];
   if (!palettePath) return errors;
 
-  const allowed = JSON.parse(fs.readFileSync(palettePath, 'utf8')).map((color) => color.toUpperCase());
+  const allowed = JSON.parse(fs.readFileSync(palettePath, 'utf8')).map(
+    (color) => color.toUpperCase()
+  );
   const palette = new Set(allowed);
   const missing = new Set();
 
   for (let i = 0; i < sheet.data.length; i += 4) {
     const alpha = sheet.data[i + 3];
     if (alpha === 0) continue;
-    const color = `#${sheet.data[i].toString(16).padStart(2, '0')}${sheet.data[i + 1]
+    const color = `#${sheet.data[i].toString(16).padStart(2, '0')}${sheet.data[
+      i + 1
+    ]
       .toString(16)
-      .padStart(2, '0')}${sheet.data[i + 2].toString(16).padStart(2, '0')}`.toUpperCase();
+      .padStart(
+        2,
+        '0'
+      )}${sheet.data[i + 2].toString(16).padStart(2, '0')}`.toUpperCase();
     if (!palette.has(color)) {
       missing.add(color);
       if (missing.size >= 10) break;
@@ -104,7 +118,9 @@ function validatePalette(name, sheet, palettePath) {
   }
 
   if (missing.size) {
-    errors.push(`${name}: found colors outside palette (${Array.from(missing).join(', ')}).`);
+    errors.push(
+      `${name}: found colors outside palette (${Array.from(missing).join(', ')}).`
+    );
   }
 
   return errors;

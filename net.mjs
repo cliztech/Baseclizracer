@@ -3,7 +3,7 @@ export function createSocket(url, onMessage) {
   const ws = new WebSocket(url);
   const queue = [];
 
-  ws.addEventListener('message', ev => {
+  ws.addEventListener('message', (ev) => {
     try {
       const envelope = JSON.parse(ev.data);
       if (onMessage) onMessage(envelope);

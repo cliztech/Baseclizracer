@@ -33,7 +33,7 @@ async function runTest() {
     env: { ...process.env, PORT }
   });
 
-  await new Promise(r => setTimeout(r, 1000));
+  await new Promise((r) => setTimeout(r, 1000));
 
   try {
     const clientA = await createClient();
@@ -45,7 +45,7 @@ async function runTest() {
     assert.ok(welcomeMsg.seed, 'Welcome message should contain a seed');
     console.log('Seed received:', welcomeMsg.seed);
 
-    await new Promise(r => setTimeout(r, 200));
+    await new Promise((r) => setTimeout(r, 200));
 
     const clientB = await createClient();
     clientB.send(JSON.stringify({ type: MSG.JOIN, roomId: 'val', name: 'B' }));
@@ -53,22 +53,29 @@ async function runTest() {
 
     // Test 1: Invalid Speed (Correction)
     console.log('Sending invalid speed...');
-    clientB.send(JSON.stringify({ type: MSG.UPDATE, speed: GAME_CONFIG.maxSpeed * 2 }));
+    clientB.send(
+      JSON.stringify({ type: MSG.UPDATE, speed: GAME_CONFIG.maxSpeed * 2 })
+    );
 
     // Check A receives Clamped UPDATE.
     let msg = await waitForMessage(clientA, MSG.UPDATE);
-    assert.strictEqual(msg.speed, GAME_CONFIG.maxSpeed, 'Speed should be clamped to maxSpeed');
+    assert.strictEqual(
+      msg.speed,
+      GAME_CONFIG.maxSpeed,
+      'Speed should be clamped to maxSpeed'
+    );
     console.log('Invalid speed corrected and broadcast.');
 
     // Test 2: Valid Speed
     console.log('Sending valid speed...');
-    clientB.send(JSON.stringify({ type: MSG.UPDATE, speed: GAME_CONFIG.maxSpeed * 0.5 }));
+    clientB.send(
+      JSON.stringify({ type: MSG.UPDATE, speed: GAME_CONFIG.maxSpeed * 0.5 })
+    );
     msg = await waitForMessage(clientA, MSG.UPDATE);
     assert.strictEqual(msg.speed, GAME_CONFIG.maxSpeed * 0.5);
     console.log('Valid speed accepted.');
 
     console.log('VALIDATION TEST PASSED');
-
   } catch (err) {
     console.error('TEST FAILED:', err);
     process.exit(1);

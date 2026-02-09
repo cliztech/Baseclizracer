@@ -51,7 +51,7 @@ test('Rival avoids slower car ahead', () => {
   const slowerCar = {
     offset: 0,
     speed: 500,
-    sprite: mockSprite,
+    sprite: mockSprite
     // Add other props if needed by loop
   };
   segments[1].cars.push(slowerCar);

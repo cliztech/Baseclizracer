@@ -1,27 +1,77 @@
-
 /****************************************/
 /* common styles used for v1 through v4 */
 /****************************************/
 
-body          { font-family: Arial, Helvetica, sans-serif; }
-#stats        { border: 2px solid black; }
-#controls     { width: 28em; float: left; padding: 1em; font-size: 0.7em; }
-#controls th  { text-align: right; vertical-align: middle; }
-#controls button + button { margin-left: 8px; }
-#instructions { clear: left; float: left; width: 17em; padding: 1em; border: 1px solid black; box-shadow: 0 0 5px black; }
-#racer        { position: relative; z-index: 0; width: 640px; height: 480px; margin-left: 20em; border: 2px solid black; }
-#canvas       { position: absolute; z-index: 0; width: 640px; height: 480px; z-index: 0; background-color: #72D7EE; }
-#mute         { background-position:   0px 0px; width: 32px; height: 32px; background: url(images/mute.png); display: inline-block; cursor: pointer; position: absolute; margin-left: 20em; border: 0; padding: 0; appearance: none; font-size: 0; background-color: transparent; }
-#mute.on      { background-position: -32px 0px; }
+body {
+  font-family: Arial, Helvetica, sans-serif;
+}
+#stats {
+  border: 2px solid black;
+}
+#controls {
+  width: 28em;
+  float: left;
+  padding: 1em;
+  font-size: 0.7em;
+}
+#controls th {
+  text-align: right;
+  vertical-align: middle;
+}
+#controls button + button {
+  margin-left: 8px;
+}
+#instructions {
+  clear: left;
+  float: left;
+  width: 17em;
+  padding: 1em;
+  border: 1px solid black;
+  box-shadow: 0 0 5px black;
+}
+#racer {
+  position: relative;
+  z-index: 0;
+  width: 640px;
+  height: 480px;
+  margin-left: 20em;
+  border: 2px solid black;
+}
+#canvas {
+  position: absolute;
+  z-index: 0;
+  width: 640px;
+  height: 480px;
+  z-index: 0;
+  background-color: #72d7ee;
+}
+#mute {
+  background-position: 0px 0px;
+  width: 32px;
+  height: 32px;
+  background: url(images/mute.png);
+  display: inline-block;
+  cursor: pointer;
+  position: absolute;
+  margin-left: 20em;
+  border: 0;
+  padding: 0;
+  appearance: none;
+  font-size: 0;
+  background-color: transparent;
+}
+#mute.on {
+  background-position: -32px 0px;
+}
 
 /* Tactile feedback for interactive elements */
 button,
 label,
 select,
 summary,
-input[type="range"],
-input[type="checkbox"],
-input[type="radio"] {
+input[type='range'],
+input[type='checkbox'],
+input[type='radio'] {
   cursor: pointer;
 }
 
@@ -83,7 +133,8 @@ kbd {
 }
 
 /* Loading state */
-#loading {
+#loading,
+#paused {
   position: absolute;
   top: 50%;
   left: 50%;
@@ -94,7 +145,7 @@ kbd {
   font-weight: bold;
   font-size: 1.5em;
   z-index: 100;
-  box-shadow: 4px 4px 0px rgba(0,0,0,0.2);
+  box-shadow: 4px 4px 0px rgba(0, 0, 0, 0.2);
 }
 
 /* Login / Lobby Overlay */
@@ -150,7 +201,7 @@ kbd {
 
 #room_browser {
   width: 14em;
-  background: rgba(0,0,0,0.8);
+  background: rgba(0, 0, 0, 0.8);
   border: 1px solid white;
   margin-bottom: 1em;
   padding: 10px;
@@ -238,17 +289,64 @@ kbd {
 /* rudimentary heads up display (only used in v4) */
 /**************************************************/
 
-#hud                   { position: absolute; z-index: 1; width: 640px; padding: 5px 0; font-family: 'Orbitron', 'Lucida Console', sans-serif; font-size: 0.8em; background: linear-gradient(90deg, rgba(255,0,255,0.4), rgba(0,255,255,0.4)); color: #fff; border-bottom: 2px solid #0ff; box-sizing: border-box; -moz-box-sizing: border-box; -webkit-box-sizing: border-box; }
-#hud .hud              { background-color: rgba(0,0,0,0.6); padding: 5px; border: 1px solid #ff00ff; margin: 0 5px; transition-property: background-color; transition-duration: 2s; -webkit-transition-property: background-color; -webkit-transition-duration: 2s; }
-#hud #speed            { float: right; }
-#hud #current_lap_time { float: left;  }
-#hud #last_lap_time    { float: left; display: none;  }
-#hud #fast_lap_time    { display: block; width: 12em;  margin: 0 auto; text-align: center; transition-property: background-color; transition-duration: 2s; -webkit-transition-property: background-color; -webkit-transition-duration: 2s; }
-#hud .value            { color: #39ff14; font-weight: bold; }
-#hud .fastest          { background-color: rgba(255,215,0,0.5); }
+#hud {
+  position: absolute;
+  z-index: 1;
+  width: 640px;
+  padding: 5px 0;
+  font-family: 'Orbitron', 'Lucida Console', sans-serif;
+  font-size: 0.8em;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 0, 255, 0.4),
+    rgba(0, 255, 255, 0.4)
+  );
+  color: #fff;
+  border-bottom: 2px solid #0ff;
+  box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  -webkit-box-sizing: border-box;
+}
+#hud .hud {
+  background-color: rgba(0, 0, 0, 0.6);
+  padding: 5px;
+  border: 1px solid #ff00ff;
+  margin: 0 5px;
+  transition-property: background-color;
+  transition-duration: 2s;
+  -webkit-transition-property: background-color;
+  -webkit-transition-duration: 2s;
+}
+#hud #speed {
+  float: right;
+}
+#hud #current_lap_time {
+  float: left;
+}
+#hud #last_lap_time {
+  float: left;
+  display: none;
+}
+#hud #fast_lap_time {
+  display: block;
+  width: 12em;
+  margin: 0 auto;
+  text-align: center;
+  transition-property: background-color;
+  transition-duration: 2s;
+  -webkit-transition-property: background-color;
+  -webkit-transition-duration: 2s;
+}
+#hud .value {
+  color: #39ff14;
+  font-weight: bold;
+}
+#hud .fastest {
+  background-color: rgba(255, 215, 0, 0.5);
+}
 
 /* Navigation active state */
-a[aria-current="page"] {
+a[aria-current='page'] {
   font-weight: bold;
   color: black;
   text-decoration: none;
@@ -298,7 +396,7 @@ a[aria-current="page"] {
 
 #chat_messages li .author {
   font-weight: bold;
-  color: #72D7EE;
+  color: #72d7ee;
   margin-right: 5px;
 }
 
@@ -312,20 +410,31 @@ a[aria-current="page"] {
   font-size: 12px;
   pointer-events: auto;
   box-sizing: border-box;
-  transition: background 0.2s, border-color 0.2s;
+  transition:
+    background 0.2s,
+    border-color 0.2s;
 }
 
 #chat_input:focus {
   background: rgba(0, 0, 0, 0.9);
-  border-color: #72D7EE;
+  border-color: #72d7ee;
   outline: none;
 }
 
 /* Latency Display in HUD */
-#hud #latency { float: right; margin-right: 10px; }
-#hud .ping-good { color: green; }
-#hud .ping-warn { color: orange; }
-#hud .ping-bad  { color: red; }
+#hud #latency {
+  float: right;
+  margin-right: 10px;
+}
+#hud .ping-good {
+  color: green;
+}
+#hud .ping-warn {
+  color: orange;
+}
+#hud .ping-bad {
+  color: red;
+}
 
 /* Accessible hiding */
 .visually-hidden {
@@ -342,7 +451,9 @@ a[aria-current="page"] {
 
 /* Spinner Animation */
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .spinner {

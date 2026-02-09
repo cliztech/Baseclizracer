@@ -21,20 +21,23 @@ module.exports = [
         global: 'readonly',
         require: 'readonly',
         process: 'readonly',
-        localStorage: 'readonly'
+        localStorage: 'readonly',
+        CONFIG: 'readonly',
+        Dom: 'readonly',
+        Game: 'readonly',
+        ethers: 'readonly',
+        module: 'readonly',
+        __dirname: 'readonly',
+        __filename: 'readonly'
       }
     },
     rules: {
-      'no-unused-vars': ['warn', { varsIgnorePattern: '^(KEY|BACKGROUND|Stats)$' }],
+      'no-unused-vars': [
+        'warn',
+        { varsIgnorePattern: '^(KEY|BACKGROUND|Stats)$' }
+      ],
       'no-redeclare': 'error',
       'no-undef': 'error'
-    }
-  },
-  {
-    files: ['images/*.js'],
-    rules: {
-      'no-unused-vars': 'off',
-      'no-var': 'off'
     }
   },
   {

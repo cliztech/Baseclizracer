@@ -45,12 +45,15 @@ describe('NetworkManager Resilience', () => {
     assert.strictEqual(ws.sentMessages.length, 0, 'Message should be delayed');
 
     // Wait
-    await new Promise(r => setTimeout(r, 100));
+    await new Promise((r) => setTimeout(r, 100));
 
     assert.strictEqual(ws.sentMessages.length, 1, 'Message should be sent');
     const msg = ws.sentMessages[0];
     // Allow small margin for execution time
-    assert.ok(msg.time - start >= 45, `Delay was ${msg.time - start}ms, expected ~50ms`);
+    assert.ok(
+      msg.time - start >= 45,
+      `Delay was ${msg.time - start}ms, expected ~50ms`
+    );
   });
 
   it('should inject smoothing factor into remote players', () => {

@@ -70,7 +70,11 @@ describe('Physics Engine', () => {
     const wrappedTarget = { ...target, z: 50 };
     // Player must be logically close for collision (e.g., at 9950)
     const wrappedPlayer = { ...player, z: 9950 };
-    const result = Physics.checkCollision(wrappedPlayer, wrappedTarget, trackLength);
+    const result = Physics.checkCollision(
+      wrappedPlayer,
+      wrappedTarget,
+      trackLength
+    );
     assert.strictEqual(result.position, 9950);
   });
 });

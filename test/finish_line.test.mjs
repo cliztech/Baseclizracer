@@ -34,8 +34,8 @@ function waitForState(ws, targetState) {
         ws.off('message', handler);
         resolve(msg);
       } else if (msg.type === MSG.WELCOME && msg.state === targetState) {
-         ws.off('message', handler);
-         resolve(msg);
+        ws.off('message', handler);
+        resolve(msg);
       }
     };
     ws.on('message', handler);
@@ -50,7 +50,7 @@ async function runTest() {
   });
 
   // Give server time to start
-  await new Promise(r => setTimeout(r, 1000));
+  await new Promise((r) => setTimeout(r, 1000));
 
   try {
     console.log('Connecting Client A (Winner)...');
@@ -60,8 +60,12 @@ async function runTest() {
     const clientB = await createClient();
 
     // Join Room
-    clientA.send(JSON.stringify({ type: MSG.JOIN, roomId: 'finish_test', name: 'Winner' }));
-    clientB.send(JSON.stringify({ type: MSG.JOIN, roomId: 'finish_test', name: 'Loser' }));
+    clientA.send(
+      JSON.stringify({ type: MSG.JOIN, roomId: 'finish_test', name: 'Winner' })
+    );
+    clientB.send(
+      JSON.stringify({ type: MSG.JOIN, roomId: 'finish_test', name: 'Loser' })
+    );
 
     console.log('Waiting for Race Start (COUNTDOWN -> RACING)...');
     // Expect COUNTDOWN
@@ -73,7 +77,7 @@ async function runTest() {
     console.log('State is RACING. GO!');
 
     // Simulate Race
-    await new Promise(r => setTimeout(r, 100));
+    await new Promise((r) => setTimeout(r, 100));
 
     // Client A Finishes
     console.log('Client A sending FINISH (Time: 100.0)...');
@@ -100,20 +104,22 @@ async function runTest() {
     // We expect STATE_UPDATE -> WAITING
     // We increase timeout of the promise since it takes 10s
     const resetMsg = await new Promise((resolve, reject) => {
-        const timeout = setTimeout(() => reject(new Error('Timeout waiting for reset')), 12000);
-        const handler = (data) => {
-            const msg = JSON.parse(data);
-            if (msg.type === MSG.STATE_UPDATE && msg.state === RACE_STATE.WAITING) {
-                clearTimeout(timeout);
-                clientA.off('message', handler);
-                resolve(msg);
-            }
-        };
-        clientA.on('message', handler);
+      const timeout = setTimeout(
+        () => reject(new Error('Timeout waiting for reset')),
+        12000
+      );
+      const handler = (data) => {
+        const msg = JSON.parse(data);
+        if (msg.type === MSG.STATE_UPDATE && msg.state === RACE_STATE.WAITING) {
+          clearTimeout(timeout);
+          clientA.off('message', handler);
+          resolve(msg);
+        }
+      };
+      clientA.on('message', handler);
     });
 
     console.log('Received STATE_UPDATE: WAITING. Race Cycle Complete.');
-
   } catch (err) {
     console.error('TEST FAILED:', err);
     process.exit(1);

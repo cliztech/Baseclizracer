@@ -33,11 +33,17 @@ function findExporter(preference = process.env.ART_EXPORTER) {
   const prefer = preference && preference.toLowerCase();
 
   if (!prefer || prefer === 'texturepacker') {
-    candidates.push({ type: 'texturepacker', names: [process.env.TEXTURE_PACKER_BIN, 'TexturePacker', 'texturepacker'] });
+    candidates.push({
+      type: 'texturepacker',
+      names: [process.env.TEXTURE_PACKER_BIN, 'TexturePacker', 'texturepacker']
+    });
   }
 
   if (!prefer || prefer === 'aseprite') {
-    candidates.push({ type: 'aseprite', names: [process.env.ASEPRITE_BIN, 'aseprite'] });
+    candidates.push({
+      type: 'aseprite',
+      names: [process.env.ASEPRITE_BIN, 'aseprite']
+    });
   }
 
   for (const candidate of candidates) {
@@ -49,13 +55,18 @@ function findExporter(preference = process.env.ART_EXPORTER) {
     }
   }
 
-  throw new Error('No art exporter found. Install TexturePacker or Aseprite CLI, or set ART_EXPORTER.');
+  throw new Error(
+    'No art exporter found. Install TexturePacker or Aseprite CLI, or set ART_EXPORTER.'
+  );
 }
 
 async function collectPngs(sourceDir, include) {
   const entries = await readdir(sourceDir, { withFileTypes: true });
   const filtered = entries
-    .filter((entry) => entry.isFile() && path.extname(entry.name).toLowerCase() === '.png')
+    .filter(
+      (entry) =>
+        entry.isFile() && path.extname(entry.name).toLowerCase() === '.png'
+    )
     .filter((entry) => !include || include.includes(entry.name))
     .map((entry) => path.join(sourceDir, entry.name));
 
@@ -91,8 +102,14 @@ function readRect(frame) {
 async function writeMetadataJs(jsonPath, scriptPath, variable) {
   const parsed = JSON.parse(await readFile(jsonPath, 'utf8'));
   const frames = Array.isArray(parsed.frames)
-    ? parsed.frames.map((frame) => ({ filename: frame.filename || frame.name, frame }))
-    : Object.entries(parsed.frames || {}).map(([filename, frame]) => ({ filename, frame }));
+    ? parsed.frames.map((frame) => ({
+        filename: frame.filename || frame.name,
+        frame
+      }))
+    : Object.entries(parsed.frames || {}).map(([filename, frame]) => ({
+        filename,
+        frame
+      }));
 
   if (!frames.length) {
     throw new Error('No frames found in exporter metadata.');
@@ -117,7 +134,10 @@ async function writeMetadataJs(jsonPath, scriptPath, variable) {
 
 async function runTexturePacker(exporter, task) {
   const files = await collectPngs(task.sourceDir, task.include);
-  const metadataPath = path.join(os.tmpdir(), `${task.name}-metadata-${Date.now()}-${process.pid}.json`);
+  const metadataPath = path.join(
+    os.tmpdir(),
+    `${task.name}-metadata-${Date.now()}-${process.pid}.json`
+  );
   const args = [
     '--data',
     metadataPath,
@@ -148,7 +168,9 @@ async function main() {
   const exporter = findExporter();
   for (const task of sheets) {
     if (exporter.type !== task.type) {
-      throw new Error(`Configured exporter ${exporter.type} cannot run ${task.type} task for ${task.name}`);
+      throw new Error(
+        `Configured exporter ${exporter.type} cannot run ${task.type} task for ${task.name}`
+      );
     }
 
     if (!existsSync(task.sourceDir)) {

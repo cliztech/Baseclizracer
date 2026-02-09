@@ -1,11 +1,11 @@
-require("@nomicfoundation/hardhat-toolbox");
+require('@nomicfoundation/hardhat-toolbox');
 
 module.exports = {
-  solidity: "0.8.20",
+  solidity: '0.8.20',
   networks: {
     base: {
-      url: process.env.BASE_RPC_URL || "https://mainnet.base.org",
-      accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
-    },
-  },
+      url: process.env.BASE_RPC_URL || 'https://mainnet.base.org',
+      accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : []
+    }
+  }
 };

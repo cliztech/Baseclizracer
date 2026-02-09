@@ -35,12 +35,12 @@ describe('RemotePlayer', () => {
   });
 
   it('should smooth towards target', () => {
-     const p = new RemotePlayer('p1', { x: 0 });
-     p.sync({ x: 1 }); // Target x = 1
-     // dt = 0.01. Smoothing = 0.1.
-     p.update(0.01, 1000);
-     // x = interpolate(0, 1, 0.1) = 0.1.
-     assert.strictEqual(p.x, 0.1);
+    const p = new RemotePlayer('p1', { x: 0 });
+    p.sync({ x: 1 }); // Target x = 1
+    // dt = 0.01. Smoothing = 0.1.
+    p.update(0.01, 1000);
+    // x = interpolate(0, 1, 0.1) = 0.1.
+    assert.strictEqual(p.x, 0.1);
   });
 
   it('should handle Z wrapping', () => {

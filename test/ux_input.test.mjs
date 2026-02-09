@@ -1,4 +1,3 @@
-
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
 
@@ -7,7 +6,7 @@ global.HTMLElement = class {};
 global.document = {
   getElementById: () => ({ style: {} }),
   addEventListener: () => {},
-  removeEventListener: () => {},
+  removeEventListener: () => {}
 };
 global.window = {};
 
@@ -19,12 +18,10 @@ describe('Game Input UX', async () => {
     let keydownHandler;
 
     global.document.addEventListener = (type, handler) => {
-       if (type === 'keydown') keydownHandler = handler;
+      if (type === 'keydown') keydownHandler = handler;
     };
 
-    const keys = [
-      { keys: [KEY.UP], mode: 'down', action: () => {} }
-    ];
+    const keys = [{ keys: [KEY.UP], mode: 'down', action: () => {} }];
 
     Game.setKeyListener(keys);
 
@@ -34,7 +31,9 @@ describe('Game Input UX', async () => {
     const event = {
       keyCode: KEY.UP,
       target: { tagName: 'BODY' },
-      preventDefault: () => { preventDefaultCalled++; },
+      preventDefault: () => {
+        preventDefaultCalled++;
+      },
       ctrlKey: false,
       metaKey: false,
       altKey: false
@@ -42,19 +41,21 @@ describe('Game Input UX', async () => {
 
     keydownHandler(event);
 
-    assert.strictEqual(preventDefaultCalled, 1, 'preventDefault should be called for game keys');
+    assert.strictEqual(
+      preventDefaultCalled,
+      1,
+      'preventDefault should be called for game keys'
+    );
   });
 
   it('should NOT prevent default for modifier keys', () => {
     let keydownHandler;
 
     global.document.addEventListener = (type, handler) => {
-       if (type === 'keydown') keydownHandler = handler;
+      if (type === 'keydown') keydownHandler = handler;
     };
 
-    const keys = [
-      { keys: [KEY.UP], mode: 'down', action: () => {} }
-    ];
+    const keys = [{ keys: [KEY.UP], mode: 'down', action: () => {} }];
 
     Game.setKeyListener(keys);
 
@@ -62,7 +63,9 @@ describe('Game Input UX', async () => {
     const event = {
       keyCode: KEY.UP,
       target: { tagName: 'BODY' },
-      preventDefault: () => { preventDefaultCalled++; },
+      preventDefault: () => {
+        preventDefaultCalled++;
+      },
       ctrlKey: true, // Modifier pressed
       metaKey: false,
       altKey: false
@@ -70,19 +73,21 @@ describe('Game Input UX', async () => {
 
     keydownHandler(event);
 
-    assert.strictEqual(preventDefaultCalled, 0, 'preventDefault should NOT be called when Ctrl is pressed');
+    assert.strictEqual(
+      preventDefaultCalled,
+      0,
+      'preventDefault should NOT be called when Ctrl is pressed'
+    );
   });
 
   it('should NOT prevent default for non-game keys', () => {
     let keydownHandler;
 
     global.document.addEventListener = (type, handler) => {
-       if (type === 'keydown') keydownHandler = handler;
+      if (type === 'keydown') keydownHandler = handler;
     };
 
-    const keys = [
-      { keys: [KEY.UP], mode: 'down', action: () => {} }
-    ];
+    const keys = [{ keys: [KEY.UP], mode: 'down', action: () => {} }];
 
     Game.setKeyListener(keys);
 
@@ -90,7 +95,9 @@ describe('Game Input UX', async () => {
     const event = {
       keyCode: 999, // Random key
       target: { tagName: 'BODY' },
-      preventDefault: () => { preventDefaultCalled++; },
+      preventDefault: () => {
+        preventDefaultCalled++;
+      },
       ctrlKey: false,
       metaKey: false,
       altKey: false
@@ -98,6 +105,10 @@ describe('Game Input UX', async () => {
 
     keydownHandler(event);
 
-    assert.strictEqual(preventDefaultCalled, 0, 'preventDefault should NOT be called for non-game keys');
+    assert.strictEqual(
+      preventDefaultCalled,
+      0,
+      'preventDefault should NOT be called for non-game keys'
+    );
   });
 });

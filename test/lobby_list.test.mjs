@@ -20,8 +20,8 @@ function createClient(port) {
 function waitForMessage(ws, type) {
   return new Promise((resolve, reject) => {
     const timeout = setTimeout(() => {
-        ws.off('message', handler);
-        reject(new Error(`Timeout waiting for ${type}`));
+      ws.off('message', handler);
+      reject(new Error(`Timeout waiting for ${type}`));
     }, 2000);
 
     const handler = (data) => {
@@ -51,8 +51,8 @@ test('Lobby Room Listing', async (t) => {
   });
 
   // Wait for server to be ready (look for stdout)
-  await new Promise(resolve => {
-    serverProcess.stdout.on('data', data => {
+  await new Promise((resolve) => {
+    serverProcess.stdout.on('data', (data) => {
       if (data.toString().includes('Nexus Lobby running')) {
         resolve();
       }
@@ -65,19 +65,22 @@ test('Lobby Room Listing', async (t) => {
 
     // Should receive initial ROOM_LIST
     const listA = await waitForMessage(clientA, 'ROOM_LIST');
-    assert.ok(listA.rooms.find(r => r.id === 'default' && r.count === 0), 'Should see default room empty');
+    assert.ok(
+      listA.rooms.find((r) => r.id === 'default' && r.count === 0),
+      'Should see default room empty'
+    );
 
     // 2. Client A joins "Room1"
     clientA.send(JSON.stringify({ type: 'JOIN', roomId: 'Room1', name: 'A' }));
 
     // 3. Client B connects
     // Give a small delay for A's join to process
-    await new Promise(r => setTimeout(r, 100));
+    await new Promise((r) => setTimeout(r, 100));
     const clientB = await createClient(port);
 
     // B should see Room1 with 1 player
     const listB = await waitForMessage(clientB, 'ROOM_LIST');
-    const room1 = listB.rooms.find(r => r.id === 'Room1');
+    const room1 = listB.rooms.find((r) => r.id === 'Room1');
     assert.ok(room1, 'Room1 should be listed');
     assert.strictEqual(room1.count, 1, 'Room1 should have 1 player');
 
@@ -85,14 +88,13 @@ test('Lobby Room Listing', async (t) => {
     clientB.send(JSON.stringify({ type: 'JOIN', roomId: 'Room1', name: 'B' }));
 
     // 5. Client C connects
-    await new Promise(r => setTimeout(r, 100));
+    await new Promise((r) => setTimeout(r, 100));
     const clientC = await createClient(port);
 
     // C should see Room1 with 2 players
     const listC = await waitForMessage(clientC, 'ROOM_LIST');
-    const room1_C = listC.rooms.find(r => r.id === 'Room1');
+    const room1_C = listC.rooms.find((r) => r.id === 'Room1');
     assert.strictEqual(room1_C.count, 2, 'Room1 should have 2 players');
-
   } finally {
     serverProcess.kill();
   }

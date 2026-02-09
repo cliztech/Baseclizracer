@@ -10,9 +10,15 @@ class MockElement {
     this.style = {};
     this._classes = new Set();
     this.classList = {
-      add: (cls) => { this._classes.add(cls); this.className = Array.from(this._classes).join(' '); },
-      remove: (cls) => { this._classes.delete(cls); this.className = Array.from(this._classes).join(' '); },
-      contains: (cls) => this._classes.has(cls),
+      add: (cls) => {
+        this._classes.add(cls);
+        this.className = Array.from(this._classes).join(' ');
+      },
+      remove: (cls) => {
+        this._classes.delete(cls);
+        this.className = Array.from(this._classes).join(' ');
+      },
+      contains: (cls) => this._classes.has(cls)
     };
     this.className = '';
     this.innerHTML = '';
@@ -56,13 +62,13 @@ class MockElement {
 global.document = {
   getElementById: (id) => {
     if (!global.mocks[id]) {
-        global.mocks[id] = new MockElement(id);
+      global.mocks[id] = new MockElement(id);
     }
     return global.mocks[id];
   },
   createElement: (tag) => {
     return new MockElement(tag);
-  },
+  }
 };
 global.window = {};
 
@@ -89,8 +95,15 @@ describe('Lobby UX', async () => {
     const li1 = list.children[0];
     assert.strictEqual(li1.tagName, 'LI');
     assert.strictEqual(li1.tabIndex, 0, 'Should be focusable');
-    assert.strictEqual(li1.getAttribute('role'), 'button', 'Should have button role');
-    assert.strictEqual(li1.getAttribute('aria-label'), 'Join room room1, 2 players');
+    assert.strictEqual(
+      li1.getAttribute('role'),
+      'button',
+      'Should have button role'
+    );
+    assert.strictEqual(
+      li1.getAttribute('aria-label'),
+      'Join room room1, 2 players'
+    );
   });
 
   it('should select room on click', () => {
@@ -117,7 +130,9 @@ describe('Lobby UX', async () => {
     let prevented = false;
     const event = {
       key: 'Enter',
-      preventDefault: () => { prevented = true; }
+      preventDefault: () => {
+        prevented = true;
+      }
     };
 
     li.trigger('keydown', event);
@@ -137,7 +152,9 @@ describe('Lobby UX', async () => {
     let prevented = false;
     const event = {
       key: ' ',
-      preventDefault: () => { prevented = true; }
+      preventDefault: () => {
+        prevented = true;
+      }
     };
 
     li.trigger('keydown', event);
@@ -158,13 +175,23 @@ describe('Lobby UX', async () => {
     let prevented = false;
     const event = {
       key: 'ArrowDown',
-      preventDefault: () => { prevented = true; }
+      preventDefault: () => {
+        prevented = true;
+      }
     };
 
     li.trigger('keydown', event);
 
-    assert.strictEqual(prevented, false, 'Should NOT prevent default on other keys');
-    assert.strictEqual(global.mocks['input_room'].value, 'original', 'Should NOT change value');
+    assert.strictEqual(
+      prevented,
+      false,
+      'Should NOT prevent default on other keys'
+    );
+    assert.strictEqual(
+      global.mocks['input_room'].value,
+      'original',
+      'Should NOT change value'
+    );
   });
 
   it('should visually select room matching input value on render', () => {
@@ -182,11 +209,26 @@ describe('Lobby UX', async () => {
     const li1 = list.children[0];
     const li2 = list.children[1];
 
-    assert.ok(li1.classList.contains('selected'), 'Matching room should have selected class');
-    assert.strictEqual(li1.getAttribute('aria-current'), 'true', 'Matching room should have aria-current');
+    assert.ok(
+      li1.classList.contains('selected'),
+      'Matching room should have selected class'
+    );
+    assert.strictEqual(
+      li1.getAttribute('aria-current'),
+      'true',
+      'Matching room should have aria-current'
+    );
 
-    assert.strictEqual(li2.classList.contains('selected'), false, 'Non-matching room should NOT have selected class');
-    assert.strictEqual(li2.getAttribute('aria-current'), undefined, 'Non-matching room should NOT have aria-current');
+    assert.strictEqual(
+      li2.classList.contains('selected'),
+      false,
+      'Non-matching room should NOT have selected class'
+    );
+    assert.strictEqual(
+      li2.getAttribute('aria-current'),
+      undefined,
+      'Non-matching room should NOT have aria-current'
+    );
   });
 
   it('should update visual selection on click', () => {
@@ -212,12 +254,31 @@ describe('Lobby UX', async () => {
     li2.trigger('click');
 
     // Verify update
-    assert.strictEqual(li1.classList.contains('selected'), false, 'Old selection should be removed');
-    assert.strictEqual(li1.getAttribute('aria-current'), undefined, 'Old aria-current should be removed');
+    assert.strictEqual(
+      li1.classList.contains('selected'),
+      false,
+      'Old selection should be removed'
+    );
+    assert.strictEqual(
+      li1.getAttribute('aria-current'),
+      undefined,
+      'Old aria-current should be removed'
+    );
 
-    assert.ok(li2.classList.contains('selected'), 'New selection should be added');
-    assert.strictEqual(li2.getAttribute('aria-current'), 'true', 'New aria-current should be added');
-    assert.strictEqual(global.mocks['input_room'].value, 'room2', 'Input value should update');
+    assert.ok(
+      li2.classList.contains('selected'),
+      'New selection should be added'
+    );
+    assert.strictEqual(
+      li2.getAttribute('aria-current'),
+      'true',
+      'New aria-current should be added'
+    );
+    assert.strictEqual(
+      global.mocks['input_room'].value,
+      'room2',
+      'Input value should update'
+    );
   });
 
   it('should render empty state when no rooms are available', () => {
@@ -231,7 +292,10 @@ describe('Lobby UX', async () => {
 
     const li = list.children[0];
     assert.strictEqual(li.tagName, 'LI');
-    assert.ok(li.classList.contains('empty-state'), 'Should have empty-state class');
+    assert.ok(
+      li.classList.contains('empty-state'),
+      'Should have empty-state class'
+    );
     assert.strictEqual(li.innerHTML, 'No signals detected...');
   });
 });

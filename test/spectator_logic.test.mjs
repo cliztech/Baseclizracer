@@ -61,27 +61,45 @@ async function runTest() {
     const p3 = await createClient();
 
     // 1. P1 Joins
-    p1.send(JSON.stringify({ type: MSG.JOIN, roomId: 'spec_test', name: 'P1' }));
+    p1.send(
+      JSON.stringify({ type: MSG.JOIN, roomId: 'spec_test', name: 'P1' })
+    );
     await waitForMessage(p1, MSG.WELCOME);
 
     // 2. P2 Joins
-    p2.send(JSON.stringify({ type: MSG.JOIN, roomId: 'spec_test', name: 'P2' }));
+    p2.send(
+      JSON.stringify({ type: MSG.JOIN, roomId: 'spec_test', name: 'P2' })
+    );
     await waitForMessage(p2, MSG.WELCOME);
 
     // 3. Wait for Countdown (Server should trigger this automatically when 2 players are present)
     console.log('Waiting for race to start (COUNTDOWN)...');
     const stateMsg = await waitForMessage(p1, MSG.STATE_UPDATE);
-    assert.strictEqual(stateMsg.state, RACE_STATE.COUNTDOWN, 'Should enter COUNTDOWN state');
+    assert.strictEqual(
+      stateMsg.state,
+      RACE_STATE.COUNTDOWN,
+      'Should enter COUNTDOWN state'
+    );
 
     // 4. P3 Joins late (during COUNTDOWN)
     console.log('P3 joining late...');
-    p3.send(JSON.stringify({ type: MSG.JOIN, roomId: 'spec_test', name: 'P3' }));
+    p3.send(
+      JSON.stringify({ type: MSG.JOIN, roomId: 'spec_test', name: 'P3' })
+    );
 
     const welcomeP3 = await waitForMessage(p3, MSG.WELCOME);
     console.log('P3 Welcome:', welcomeP3);
 
-    assert.strictEqual(welcomeP3.isSpectator, true, 'P3 should be flagged as spectator');
-    assert.strictEqual(welcomeP3.state, RACE_STATE.COUNTDOWN, 'State should be COUNTDOWN');
+    assert.strictEqual(
+      welcomeP3.isSpectator,
+      true,
+      'P3 should be flagged as spectator'
+    );
+    assert.strictEqual(
+      welcomeP3.state,
+      RACE_STATE.COUNTDOWN,
+      'State should be COUNTDOWN'
+    );
 
     // 5. Verify P3 UPDATEs are ignored
     // We need to listen on P1 to see if it receives P3's update
@@ -102,10 +120,14 @@ async function runTest() {
     };
     p1.on('message', p1Listener);
 
-    await new Promise(r => setTimeout(r, 500));
+    await new Promise((r) => setTimeout(r, 500));
     p1.removeListener('message', p1Listener);
 
-    assert.strictEqual(receivedUpdateFromP3, false, 'P1 should NOT receive updates from spectator P3');
+    assert.strictEqual(
+      receivedUpdateFromP3,
+      false,
+      'P1 should NOT receive updates from spectator P3'
+    );
 
     // 6. Reset Room (Simulate by P1 and P2 leaving)
     console.log('P1 & P2 leaving...');
@@ -118,7 +140,11 @@ async function runTest() {
     // So P3 should get STATE_UPDATE -> WAITING.
 
     const stateReset = await waitForMessage(p3, MSG.STATE_UPDATE);
-    assert.strictEqual(stateReset.state, RACE_STATE.WAITING, 'Should return to WAITING');
+    assert.strictEqual(
+      stateReset.state,
+      RACE_STATE.WAITING,
+      'Should return to WAITING'
+    );
 
     // Wait a moment for local logic to potentially clear flag (client side)
     // But here we are testing server side.
@@ -132,7 +158,9 @@ async function runTest() {
     console.log('P3 sending UPDATE after reset...');
     // We need another client to hear it.
     const p4 = await createClient();
-    p4.send(JSON.stringify({ type: MSG.JOIN, roomId: 'spec_test', name: 'P4' }));
+    p4.send(
+      JSON.stringify({ type: MSG.JOIN, roomId: 'spec_test', name: 'P4' })
+    );
     await waitForMessage(p4, MSG.WELCOME);
 
     // P3 sends update
@@ -140,15 +168,14 @@ async function runTest() {
 
     const p4UpdatePromise = waitForMessage(p4, MSG.UPDATE);
     const updateMsg = await Promise.race([
-        p4UpdatePromise,
-        new Promise(r => setTimeout(() => r(null), 1000))
+      p4UpdatePromise,
+      new Promise((r) => setTimeout(() => r(null), 1000))
     ]);
 
     assert.ok(updateMsg, 'P4 should receive update from P3 now');
     assert.strictEqual(updateMsg.id, welcomeP3.id, 'Update should be from P3');
 
     console.log('Test Passed!');
-
   } catch (err) {
     console.error('Test Failed:', err);
     process.exit(1);

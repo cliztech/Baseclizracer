@@ -5,7 +5,10 @@ async function main() {
   const tracker = await RaceTracker.deploy();
   await tracker.deployed();
   console.log('RaceTracker deployed to:', tracker.address);
-  fs.writeFileSync('config.js', `var CONFIG = { contractAddress: '${tracker.address}' };\n`);
+  fs.writeFileSync(
+    'config.js',
+    `var CONFIG = { contractAddress: '${tracker.address}' };\n`
+  );
 }
 
 main().catch((error) => {

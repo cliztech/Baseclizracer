@@ -8,14 +8,22 @@ import { SPRITES, MSG, RACE_STATE } from './constants.mjs';
  * Orchestrates connection, state synchronization, and resilience simulation.
  */
 export class NetworkManager {
-  constructor({ onRoomList, onPlayerJoin, onPlayerLeave, onChat, onWelcome, onCorrection, onPlayerFinished }) {
+  constructor({
+    onRoomList,
+    onPlayerJoin,
+    onPlayerLeave,
+    onChat,
+    onWelcome,
+    onCorrection,
+    onPlayerFinished
+  }) {
     this.socket = null;
     this.remotePlayers = {};
     this.id = null; // Store our own ID
 
     // Configuration
     this.simulatedLatency = 0; // ms
-    this.smoothing = 10;       // convergence factor
+    this.smoothing = 10; // convergence factor
 
     // Callbacks
     this.onRoomList = onRoomList || (() => {});
@@ -138,8 +146,9 @@ export class NetworkManager {
         this.id = data.id;
         this.isSpectator = data.isSpectator || false;
         this.onWelcome(data);
-        this.raceState = data.state !== undefined ? data.state : RACE_STATE.WAITING;
-        data.players.forEach(p => this._addRemotePlayer(p.id, p));
+        this.raceState =
+          data.state !== undefined ? data.state : RACE_STATE.WAITING;
+        data.players.forEach((p) => this._addRemotePlayer(p.id, p));
         break;
       case MSG.STATE_UPDATE:
         this.raceState = data.state;

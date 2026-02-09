@@ -34,23 +34,37 @@ async function runTest() {
   });
 
   // Give server time to start
-  await new Promise(r => setTimeout(r, 1000));
+  await new Promise((r) => setTimeout(r, 1000));
 
   try {
     console.log('Connecting Client A...');
     const clientA = await createClient();
 
     console.log('Client A joining room "race1"...');
-    clientA.send(JSON.stringify({ type: MSG.JOIN, roomId: 'race1', spriteIndex: 0, name: 'Maverick' }));
+    clientA.send(
+      JSON.stringify({
+        type: MSG.JOIN,
+        roomId: 'race1',
+        spriteIndex: 0,
+        name: 'Maverick'
+      })
+    );
 
     // Give A time to switch rooms
-    await new Promise(r => setTimeout(r, 200));
+    await new Promise((r) => setTimeout(r, 200));
 
     console.log('Connecting Client B...');
     const clientB = await createClient();
 
     console.log('Client B joining room "race1"...');
-    clientB.send(JSON.stringify({ type: MSG.JOIN, roomId: 'race1', spriteIndex: 1, name: 'Goose' }));
+    clientB.send(
+      JSON.stringify({
+        type: MSG.JOIN,
+        roomId: 'race1',
+        spriteIndex: 1,
+        name: 'Goose'
+      })
+    );
 
     // Client A should see Client B join
     console.log('Waiting for Client A to see Client B join...');
@@ -61,7 +75,7 @@ async function runTest() {
 
     // === CHAT TEST ===
     console.log('Client A sending CHAT...');
-    const chatMsg = "Talk to me, Goose.";
+    const chatMsg = 'Talk to me, Goose.';
     clientA.send(JSON.stringify({ type: MSG.CHAT, message: chatMsg }));
 
     console.log('Waiting for Client B to receive CHAT...');
@@ -82,7 +96,6 @@ async function runTest() {
     assert.ok(pongMsg.serverTime >= now);
 
     console.log('TEST PASSED');
-
   } catch (err) {
     console.error('TEST FAILED:', err);
     process.exit(1);

@@ -1,0 +1,12 @@
+
+> base-racers@1.0.0 server /app
+> node server/index.mjs
+
+Room created: default
+Nexus Lobby running on port 8080
+Client connected: b87e664b-d17d-44bd-a109-9dde6a4cb0f4
+Client disconnected: b87e664b-d17d-44bd-a109-9dde6a4cb0f4
+Client connected: 7d127547-3d95-41ea-bc68-809ae32ff1c2
+Client disconnected: 7d127547-3d95-41ea-bc68-809ae32ff1c2
+Client connected: 7f55efb5-dcff-4cc5-82af-4deb254dcafe
+Client disconnected: 7f55efb5-dcff-4cc5-82af-4deb254dcafe

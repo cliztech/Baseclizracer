@@ -33,7 +33,10 @@ export class Rival {
 
         const carW = car.sprite.w * SPRITES.SCALE;
 
-        if (this.speed > car.speed && Util.overlap(this.offset, myW, car.offset, carW, 1.2)) {
+        if (
+          this.speed > car.speed &&
+          Util.overlap(this.offset, myW, car.offset, carW, 1.2)
+        ) {
           this.avoid(car.offset);
           return;
         }
@@ -41,12 +44,16 @@ export class Rival {
 
       // Check for player
       if (player) {
-        const playerSegmentIndex = Math.floor(player.z / segmentLength) % segments.length;
+        const playerSegmentIndex =
+          Math.floor(player.z / segmentLength) % segments.length;
         if (segment.index === playerSegmentIndex) {
-           if (this.speed > player.speed && Util.overlap(this.offset, myW, player.x, player.w, 1.2)) {
-              this.avoid(player.x);
-              return;
-           }
+          if (
+            this.speed > player.speed &&
+            Util.overlap(this.offset, myW, player.x, player.w, 1.2)
+          ) {
+            this.avoid(player.x);
+            return;
+          }
         }
       }
     }

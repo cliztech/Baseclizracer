@@ -11,18 +11,21 @@ export function renderRoomList(rooms) {
 
   if (rooms.length === 0) {
     const li = document.createElement('li');
-    li.innerHTML = "No signals detected...";
+    li.innerHTML = 'No signals detected...';
     li.classList.add('empty-state');
     list.appendChild(li);
     return;
   }
 
-  rooms.forEach(room => {
+  rooms.forEach((room) => {
     const li = document.createElement('li');
     li.innerHTML = `<span>${room.id}</span><span class="count">${room.count}</span>`;
     li.tabIndex = 0;
     li.setAttribute('role', 'button');
-    li.setAttribute('aria-label', `Join room ${room.id}, ${room.count} players`);
+    li.setAttribute(
+      'aria-label',
+      `Join room ${room.id}, ${room.count} players`
+    );
 
     if (currentRoom === room.id) {
       li.classList.add('selected');
@@ -33,7 +36,7 @@ export function renderRoomList(rooms) {
       if (input) input.value = room.id;
 
       // Update visual selection
-      Array.from(list.children).forEach(child => {
+      Array.from(list.children).forEach((child) => {
         child.classList.remove('selected');
         child.removeAttribute('aria-current');
       });

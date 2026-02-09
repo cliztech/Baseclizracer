@@ -20,7 +20,8 @@ export const Physics = {
     // Determine distance taking track wrapping into account
     // player.z and target.z are absolute track positions
     let dist = Math.abs(player.z - target.z);
-    if (trackLength) { // Handle wrapping
+    if (trackLength) {
+      // Handle wrapping
       const halfTrack = trackLength / 2;
       if (dist > halfTrack) {
         dist = trackLength - dist;
@@ -36,7 +37,6 @@ export const Physics = {
     // 3. Check Lateral Overlap
     // Uses 0.8 fudge factor from original game logic to be forgiving
     if (Util.overlap(player.x, player.w, target.x, target.w, 0.8)) {
-
       // 4. Resolve Collision
       // Formula: speed = target.speed * (target.speed / player.speed)
       // This drastically slows the player down if they are much faster.
@@ -45,7 +45,11 @@ export const Physics = {
       // Snap position behind the target
       // position (camera Z) = target.z - player.relativeZ
       // We use Util.increase to handle track wrapping math safely
-      const newPosition = Util.increase(target.z, -player.relativeZ, trackLength);
+      const newPosition = Util.increase(
+        target.z,
+        -player.relativeZ,
+        trackLength
+      );
 
       return {
         speed: newSpeed,

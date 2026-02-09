@@ -1,4 +1,4 @@
-(function(){
+(function () {
   if (typeof window.ethereum === 'undefined') {
     console.warn('No web3 provider found');
     return;
@@ -7,9 +7,11 @@
   const provider = new ethers.providers.Web3Provider(window.ethereum);
   provider.send('eth_requestAccounts', []);
   const signer = provider.getSigner();
-  const contract = new ethers.Contract(CONFIG.contractAddress, [
-    'function submitLap(address racer, uint256 time)'
-  ], signer);
+  const contract = new ethers.Contract(
+    CONFIG.contractAddress,
+    ['function submitLap(address racer, uint256 time)'],
+    signer
+  );
 
   window.Web3Race = {
     async submitLap(time) {

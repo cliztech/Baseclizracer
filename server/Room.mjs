@@ -13,7 +13,7 @@ export class Room {
 
   add(client) {
     // Determine spectator status (late joiners are spectators)
-    client.isSpectator = (this.state !== RACE_STATE.WAITING);
+    client.isSpectator = this.state !== RACE_STATE.WAITING;
 
     // 1. Gather existing players state
     const players = [];
@@ -112,13 +112,13 @@ export class Room {
 
       // Validate Speed
       if (Math.abs(speed) > GAME_CONFIG.maxSpeed * 1.1) {
-        speed = (speed > 0) ? GAME_CONFIG.maxSpeed : -GAME_CONFIG.maxSpeed;
+        speed = speed > 0 ? GAME_CONFIG.maxSpeed : -GAME_CONFIG.maxSpeed;
         corrected = true;
       }
 
       // Validate X
       if (Math.abs(x) > 3) {
-        x = (x > 0) ? 3 : -3;
+        x = x > 0 ? 3 : -3;
         corrected = true;
       }
 
@@ -130,10 +130,10 @@ export class Room {
       if (corrected) {
         // Send Correction to Sender (Authoritative)
         client.send(MSG.UPDATE, {
-           id: client.id,
-           x: client.state.x,
-           z: client.state.z,
-           speed: client.state.speed
+          id: client.id,
+          x: client.state.x,
+          z: client.state.z,
+          speed: client.state.speed
         });
       }
 
@@ -150,7 +150,11 @@ export class Room {
         serverTime: Date.now()
       });
     } else if (message.type === MSG.CHAT) {
-      if (!message.message || typeof message.message !== 'string' || message.message.length > 140) {
+      if (
+        !message.message ||
+        typeof message.message !== 'string' ||
+        message.message.length > 140
+      ) {
         return; // Ignore invalid/too long messages
       }
       // Broadcast to ALL (including sender) to ensure ordering
@@ -161,7 +165,7 @@ export class Room {
       });
     } else if (message.type === MSG.FINISH) {
       if (this.state !== RACE_STATE.RACING) return;
-      if (this.results.find(r => r.id === client.id)) return; // Already finished
+      if (this.results.find((r) => r.id === client.id)) return; // Already finished
 
       const rank = this.results.length + 1;
       const time = message.time;
@@ -178,7 +182,7 @@ export class Room {
       if (this.results.length >= this.clients.size) {
         // Start cooldown to reset to lobby
         this.finishTimer = setTimeout(() => {
-           this.setState(RACE_STATE.WAITING);
+          this.setState(RACE_STATE.WAITING);
         }, 10000);
       }
     }

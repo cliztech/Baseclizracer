@@ -12,7 +12,7 @@ export class Lobby {
     // Create a default room for now
     this.createRoom('default');
 
-    this.wss.on('connection', ws => this.handleConnection(ws));
+    this.wss.on('connection', (ws) => this.handleConnection(ws));
 
     console.log(`Nexus Lobby running on port ${port}`);
   }
@@ -31,8 +31,9 @@ export class Lobby {
 
     console.log(`Client connected: ${client.id}`);
 
-    ws.on('message', data => {
-      if (!client.rateLimit(20)) { // 20 msg/sec limit
+    ws.on('message', (data) => {
+      if (!client.rateLimit(20)) {
+        // 20 msg/sec limit
         // console.warn(`Client ${client.id} exceeded rate limit.`);
         return;
       }
