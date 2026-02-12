@@ -1,11 +1,32 @@
-Javascript Pseudo 3D Racer
-==========================
+Base Racers
+===========
 
-An Outrun-style pseudo-3d racing game in HTML5 and Javascript
+Base Racers is an Outrun-style pseudo-3d racing game in HTML5 and Javascript.
+
+*For studio/team guidance, see the [Base Racers Team Playbook](docs/TEAM_PLAYBOOK.md).* 
 
  * [play the game](https://jakesgordon.com/games/racer/)
  * view the [source](https://github.com/jakesgordon/javascript-racer)
- * read about [how it works](https://jakesgordon.com/writing/javascript-racer/)
+* read about [how it works](https://jakesgordon.com/writing/javascript-racer/)
+
+Development
+-----------
+
+```
+npm ci       # install dependencies
+npm start    # launch http://localhost:8080/v4.final.html
+npm test     # run unit tests
+npm run build:art    # export sprite sheets into images/ with TexturePacker or Aseprite CLI
+npm run validate:art # verify sprite metadata bounds and palette discipline
+npm run lint:art     # enforce ESLint/Prettier rules on generated metadata
+```
+
+Art exports
+-----------
+
+This repo does not currently include an asset exporter or `build:art` task. Art assets
+should be added directly to `/images` until a full art pipeline is
+introduced.
 
 Incrementally built up in 4 parts:
 
@@ -120,4 +141,3 @@ project and should not be reproduced.
 >> NOTE: the sprite graphics are placeholder graphics [borrowed](http://pixel.garoux.net/game/44) from the old
 genesis version of outrun and used here as teaching examples. If there are any pixel artists out there who want to 
 provide original art to turn this into a real game please get in touch!
-
