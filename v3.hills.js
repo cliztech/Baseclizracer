@@ -1,4 +1,8 @@
-/* eslint-disable */
+import { Dom } from './dom.mjs';
+import { Util } from './util.mjs';
+import { Game } from './game.mjs';
+import { Render } from './render.mjs';
+import { KEY, COLORS, BACKGROUND } from './constants.mjs';
 import { setupTweakUI, refreshTweakUI } from "./tweak-ui.mjs";
 
     var fps           = 60;                      // how many 'update' frames per second
@@ -209,14 +213,6 @@ import { setupTweakUI, refreshTweakUI } from "./tweak-ui.mjs";
       addRoad(num, num, num,  0,  0);
     }
 
-    function addSCurves() {
-      addRoad(ROAD.LENGTH.MEDIUM, ROAD.LENGTH.MEDIUM, ROAD.LENGTH.MEDIUM,  -ROAD.CURVE.EASY,    ROAD.HILL.NONE);
-      addRoad(ROAD.LENGTH.MEDIUM, ROAD.LENGTH.MEDIUM, ROAD.LENGTH.MEDIUM,   ROAD.CURVE.MEDIUM,  ROAD.HILL.MEDIUM);
-      addRoad(ROAD.LENGTH.MEDIUM, ROAD.LENGTH.MEDIUM, ROAD.LENGTH.MEDIUM,   ROAD.CURVE.EASY,   -ROAD.HILL.LOW);
-      addRoad(ROAD.LENGTH.MEDIUM, ROAD.LENGTH.MEDIUM, ROAD.LENGTH.MEDIUM,  -ROAD.CURVE.EASY,    ROAD.HILL.MEDIUM);
-      addRoad(ROAD.LENGTH.MEDIUM, ROAD.LENGTH.MEDIUM, ROAD.LENGTH.MEDIUM,  -ROAD.CURVE.MEDIUM, -ROAD.HILL.MEDIUM);
-    }
-
     function addDownhillToEnd(num) {
       num = num || 200;
       addRoad(num, num, num, -ROAD.CURVE.EASY, -lastY()/segmentLength);
@@ -266,14 +262,18 @@ import { setupTweakUI, refreshTweakUI } from "./tweak-ui.mjs";
         { keys: [KEY.LEFT,  KEY.A], mode: 'up',   action: function() { keyLeft   = false; } },
         { keys: [KEY.RIGHT, KEY.D], mode: 'up',   action: function() { keyRight  = false; } },
         { keys: [KEY.UP,    KEY.W], mode: 'up',   action: function() { keyFaster = false; } },
-        { keys: [KEY.DOWN,  KEY.S], mode: 'up',   action: function() { keySlower = false; } }
+        { keys: [KEY.DOWN,  KEY.S], mode: 'up',   action: function() { keySlower = false; } },
+        { keys: [KEY.R],            mode: 'down', action: function() { reset();           } }
       ],
       ready: function(images) {
         background = images[0];
         sprites    = images[1];
         reset();
+        Dom.hide('loading');
       }
     });
+
+    Dom.on('restart', 'click', function() { reset(); });
 
     function reset(options) {
       options       = options || {};
@@ -290,10 +290,10 @@ import { setupTweakUI, refreshTweakUI } from "./tweak-ui.mjs";
       cameraDepth            = 1 / Math.tan((fieldOfView/2) * Math.PI/180);
       playerZ                = (cameraHeight * cameraDepth);
       resolution             = height/480;
-      refreshTweakUI();
+      refreshTweakUI({ lanes, roadWidth, cameraHeight, drawDistance, fieldOfView, fogDensity });
 
       if ((segments.length==0) || (options.segmentLength) || (options.rumbleLength))
         resetRoad(); // only rebuild road when necessary
     }
 
-setupTweakUI();
+setupTweakUI({ reset: reset });

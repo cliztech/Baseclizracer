@@ -16,7 +16,17 @@ Development
 npm ci       # install dependencies
 npm start    # launch http://localhost:8080/v4.final.html
 npm test     # run unit tests
+npm run build:art    # export sprite sheets into images/ with TexturePacker or Aseprite CLI
+npm run validate:art # verify sprite metadata bounds and palette discipline
+npm run lint:art     # enforce ESLint/Prettier rules on generated metadata
 ```
+
+Art exports
+-----------
+
+This repo does not currently include an asset exporter or `build:art` task. Art assets
+should be added directly to `/images` until a full art pipeline is
+introduced.
 
 Incrementally built up in 4 parts:
 
@@ -62,6 +72,18 @@ page (horror!) and, even worse, uses global variables and functions (OMG!).
 
 If I was building a real game I would have much more structure and organization to the
 code, but since its just a racing game tech demo, I have elected to [KISS](http://en.wikipedia.org/wiki/KISS_principle).
+
+CSS Build Step
+==============
+
+Manual `-moz-` and `-webkit-` prefixes have been removed from `common.css`. Use PostCSS with Autoprefixer during development to add any required vendor prefixes:
+
+```
+npm install
+npm run build:css
+```
+
+Modern browsers handle `box-sizing` and CSS transitions without prefixes, so the build currently outputs the same styles while keeping the option for older targets.
 
 FUTURE
 ======
@@ -119,4 +141,3 @@ project and should not be reproduced.
 >> NOTE: the sprite graphics are placeholder graphics [borrowed](http://pixel.garoux.net/game/44) from the old
 genesis version of outrun and used here as teaching examples. If there are any pixel artists out there who want to 
 provide original art to turn this into a real game please get in touch!
-

@@ -1,6 +1,6 @@
 <!DOCTYPE html> 
 
-<html>
+<html lang="en">
 <head>
   <title>Base Racers - v3 (hills)</title>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
@@ -9,12 +9,14 @@
 
 <body> 
 
+  <a class="skip-link" href="#racer">Skip to game</a>
+
   <table id="controls">
     <tr>
       <td colspan="2">
         <a href='v1.straight.html'>straight</a> |
         <a href='v2.curves.html'>curves</a>     |
-        <a href='v3.hills.html'>hills</a>       |
+        <a href='v3.hills.html' aria-current="page">hills</a>       |
         <a href='v4.final.html'>final</a>
       </td>
     </tr>
@@ -61,27 +63,31 @@
       <th><label for="fogDensity">Fog Density (<span id="currentFogDensity"></span>) :</label></th>
       <td><input id="fogDensity" type='range' min='0' max='50' title="integer (0-50)"></td>
     </tr>
+    <tr>
+      <th>Actions :</th>
+      <td><button id="restart" aria-keyshortcuts="r">Restart Race</button></td>
+    </tr>
   </table>
 
   <div id='instructions'>
-    <p>Use the <b>arrow keys</b> to drive the car.</p>
+    <p>Use <kbd>↑</kbd> <kbd>↓</kbd> <kbd>←</kbd> <kbd>→</kbd> or <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> to drive.</p>
+    <p>Press <kbd>R</kbd> to restart.</p>
   </div>
 
-  <div id="racer">
+  <div id="racer" tabindex="-1" aria-label="Game screen">
     <canvas id="canvas">
       Sorry, this example cannot be run because your browser does not support the &lt;canvas&gt; element
     </canvas>
-    Loading...
+    <div id="loading">Loading...</div>
   </div>
 
   <audio id='music'>
     <source src="music/racer.ogg">
     <source src="music/racer.mp3">
   </audio>
-  <button id="mute" aria-label="Toggle Mute"></button>
+  <button id="mute" type="button" aria-label="Mute music"></button>
 
   <script src="stats.js"></script>
-  <script src="common.js"></script>
   <script type="module" src="v3.hills.js"></script>
 
 </body> 

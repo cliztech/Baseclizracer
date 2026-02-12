@@ -7,22 +7,352 @@ body          { font-family: Arial, Helvetica, sans-serif; }
 #stats        { border: 2px solid black; }
 #controls     { width: 28em; float: left; padding: 1em; font-size: 0.7em; }
 #controls th  { text-align: right; vertical-align: middle; }
+#controls button + button { margin-left: 8px; }
 #instructions { clear: left; float: left; width: 17em; padding: 1em; border: 1px solid black; box-shadow: 0 0 5px black; }
 #racer        { position: relative; z-index: 0; width: 640px; height: 480px; margin-left: 20em; border: 2px solid black; }
 #canvas       { position: absolute; z-index: 0; width: 640px; height: 480px; z-index: 0; background-color: #72D7EE; }
-#mute         { background-position: 0px 0px; width: 32px; height: 32px; background: url(images/mute.png); display: inline-block; cursor: pointer; position: absolute; margin-left: 20em; border: 0; padding: 0; }
+#mute         { background-position:   0px 0px; width: 32px; height: 32px; background: url(images/mute.png); display: inline-block; cursor: pointer; position: absolute; margin-left: 20em; border: 0; padding: 0; appearance: none; font-size: 0; background-color: transparent; }
 #mute.on      { background-position: -32px 0px; }
+
+/* Tactile feedback for interactive elements */
+button,
+label,
+select,
+summary,
+input[type="range"],
+input[type="checkbox"],
+input[type="radio"] {
+  cursor: pointer;
+}
+
+button:active {
+  transform: translateY(1px);
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* Consistent focus styles for all interactive elements */
+#racer:focus-visible,
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+summary:focus-visible {
+  outline: 2px solid black;
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* Keyboard key styling */
+kbd {
+  display: inline-block;
+  padding: 3px 5px;
+  font-family: monospace;
+  font-size: 11px;
+  line-height: 10px;
+  color: #444d56;
+  vertical-align: middle;
+  background-color: #fafbfc;
+  border: 1px solid #d1d5da;
+  border-bottom-color: #c6cbd1;
+  border-radius: 3px;
+  box-shadow: inset 0 -1px 0 #c6cbd1;
+}
+
+/* Skip link for keyboard accessibility */
+.skip-link {
+  position: absolute;
+  top: -100px;
+  left: 0;
+  background: white;
+  padding: 8px;
+  z-index: 1000;
+  border: 2px solid black;
+  border-top: none;
+  border-left: none;
+  font-weight: bold;
+  color: black;
+  text-decoration: none;
+  transition: top 0.2s;
+}
+
+.skip-link:focus {
+  top: 0;
+}
+
+/* Loading state */
+#loading {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(255, 255, 255, 0.9);
+  padding: 1em 2em;
+  border: 2px solid black;
+  font-weight: bold;
+  font-size: 1.5em;
+  z-index: 100;
+  box-shadow: 4px 4px 0px rgba(0,0,0,0.2);
+}
+
+/* Login / Lobby Overlay */
+#login {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-family: 'Courier New', Courier, monospace;
+}
+
+#login h2 {
+  font-size: 2em;
+  margin-bottom: 1em;
+  text-shadow: 2px 2px 0px black;
+  border-bottom: 2px solid white;
+  padding-bottom: 0.2em;
+}
+
+#login .field {
+  margin-bottom: 1em;
+  text-align: center;
+}
+
+#login label {
+  display: block;
+  font-weight: bold;
+  margin-bottom: 0.5em;
+  font-size: 0.9em;
+  letter-spacing: 2px;
+}
+
+#login input {
+  font-size: 1.2em;
+  padding: 0.5em;
+  text-align: center;
+  border: 2px solid white;
+  background: black;
+  color: yellow;
+  font-family: 'Courier New', Courier, monospace;
+  width: 12em;
+  text-transform: uppercase;
+}
+
+#room_browser {
+  width: 14em;
+  background: rgba(0,0,0,0.8);
+  border: 1px solid white;
+  margin-bottom: 1em;
+  padding: 10px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+#room_browser h3 {
+  margin: 0 0 10px 0;
+  font-size: 0.8em;
+  border-bottom: 1px solid #444;
+  padding-bottom: 5px;
+  color: #ccc;
+  text-align: center;
+}
+
+#room_list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+#room_list li {
+  padding: 5px;
+  cursor: pointer;
+  border-bottom: 1px solid #333;
+  display: flex;
+  justify-content: space-between;
+  transition: background-color 0.2s;
+}
+
+#room_list li:hover {
+  background: #333;
+  color: yellow;
+}
+
+/* Selected room in lobby list */
+#room_list li.selected {
+  background: #444;
+  color: yellow;
+  border-left: 4px solid yellow;
+}
+
+#room_list li .count {
+  background: #555;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 0.8em;
+  color: white;
+}
+
+#room_list li.empty-state {
+  font-style: italic;
+  color: #999;
+  text-align: center;
+  cursor: default;
+  display: block;
+  border: none;
+}
+
+#room_list li.empty-state:hover {
+  background: transparent;
+  color: #999;
+}
+
+#btn_join {
+  margin-top: 1em;
+  font-size: 1.5em;
+  padding: 0.5em 1em;
+  background: yellow;
+  color: black;
+  border: 2px solid white;
+  font-family: 'Courier New', Courier, monospace;
+  font-weight: bold;
+  box-shadow: 4px 4px 0px black;
+  transition: transform 0.1s;
+}
+
+#btn_join:active {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0px black;
+}
 
 /**************************************************/
 /* rudimentary heads up display (only used in v4) */
 /**************************************************/
 
-#hud                   { position: absolute; z-index: 1; width: 640px; padding: 5px 0; font-family: Verdana, Geneva, sans-serif; font-size: 0.8em; background-color: rgba(255,0,0,0.4); color: black; border-bottom: 2px solid black; box-sizing: border-box; -moz-box-sizing: border-box; -webkit-box-sizing: border-box; }
-#hud .hud              { background-color: rgba(255,255,255,0.6); padding: 5px; border: 1px solid black; margin: 0 5px; transition-property: background-color; transition-duration: 2s; -webkit-transition-property: background-color; -webkit-transition-duration: 2s; }
+#hud                   { position: absolute; z-index: 1; width: 640px; padding: 5px 0; font-family: 'Orbitron', 'Lucida Console', sans-serif; font-size: 0.8em; background: linear-gradient(90deg, rgba(255,0,255,0.4), rgba(0,255,255,0.4)); color: #fff; border-bottom: 2px solid #0ff; box-sizing: border-box; -moz-box-sizing: border-box; -webkit-box-sizing: border-box; }
+#hud .hud              { background-color: rgba(0,0,0,0.6); padding: 5px; border: 1px solid #ff00ff; margin: 0 5px; transition-property: background-color; transition-duration: 2s; -webkit-transition-property: background-color; -webkit-transition-duration: 2s; }
 #hud #speed            { float: right; }
 #hud #current_lap_time { float: left;  }
 #hud #last_lap_time    { float: left; display: none;  }
 #hud #fast_lap_time    { display: block; width: 12em;  margin: 0 auto; text-align: center; transition-property: background-color; transition-duration: 2s; -webkit-transition-property: background-color; -webkit-transition-duration: 2s; }
-#hud .value            { color: black; font-weight: bold; }
+#hud .value            { color: #39ff14; font-weight: bold; }
 #hud .fastest          { background-color: rgba(255,215,0,0.5); }
 
+/* Navigation active state */
+a[aria-current="page"] {
+  font-weight: bold;
+  color: black;
+  text-decoration: none;
+  cursor: default;
+}
+
+/* Chat UI */
+#chat {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  width: 320px;
+  z-index: 20;
+  font-family: 'Courier New', Courier, monospace;
+  pointer-events: none;
+}
+
+#chat_messages {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 5px 0;
+  height: 150px;
+  overflow-y: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+#chat_messages li {
+  background: rgba(0, 0, 0, 0.6);
+  color: white;
+  padding: 3px 6px;
+  margin-top: 2px;
+  font-size: 12px;
+  border-left: 3px solid transparent;
+  text-shadow: 1px 1px 0 #000;
+  border-radius: 0 4px 4px 0;
+  width: fit-content;
+  max-width: 100%;
+  word-wrap: break-word;
+}
+
+#chat_messages li.system {
+  color: #ffff00;
+  font-style: italic;
+}
+
+#chat_messages li .author {
+  font-weight: bold;
+  color: #72D7EE;
+  margin-right: 5px;
+}
+
+#chat_input {
+  width: 100%;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: white;
+  padding: 5px;
+  font-family: inherit;
+  font-size: 12px;
+  pointer-events: auto;
+  box-sizing: border-box;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+#chat_input:focus {
+  background: rgba(0, 0, 0, 0.9);
+  border-color: #72D7EE;
+  outline: none;
+}
+
+/* Latency Display in HUD */
+#hud #latency { float: right; margin-right: 10px; }
+#hud .ping-good { color: green; }
+#hud .ping-warn { color: orange; }
+#hud .ping-bad  { color: red; }
+
+/* Accessible hiding */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Spinner Animation */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.spinner {
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  border: 3px solid rgba(0, 0, 0, 0.3);
+  border-radius: 50%;
+  border-top-color: currentColor;
+  animation: spin 0.8s linear infinite;
+  vertical-align: text-bottom;
+  margin-right: 0.5em;
+}
