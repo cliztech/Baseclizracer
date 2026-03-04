@@ -1,6 +1,7 @@
 import { WebSocketServer } from 'ws';
 import { Client } from './Client.mjs';
 import { Room } from './Room.mjs';
+import { MSG } from '../constants.mjs';
 
 export class Lobby {
   constructor(port = 8080) {
@@ -31,6 +32,11 @@ export class Lobby {
     console.log(`Client connected: ${client.id}`);
 
     ws.on('message', data => {
+      if (!client.rateLimit(20)) { // 20 msg/sec limit
+        // console.warn(`Client ${client.id} exceeded rate limit.`);
+        return;
+      }
+
       try {
         const message = JSON.parse(data);
         this.handleMessage(client, message);
@@ -45,14 +51,15 @@ export class Lobby {
         client.room.remove(client);
       }
       this.clients.delete(ws);
+      this.broadcastRoomList();
     });
 
-    // Auto-join default room for backward compatibility
-    this.joinRoom(client, 'default', 0);
+    // Send room list to new client
+    client.send(MSG.ROOM_LIST, { rooms: this.getRoomList() });
   }
 
   handleMessage(client, message) {
-    if (message.type === 'JOIN') {
+    if (message.type === MSG.JOIN) {
       this.joinRoom(client, message.roomId, message.spriteIndex, message.name);
     } else if (client.room) {
       client.room.handleMessage(client, message);
@@ -73,5 +80,25 @@ export class Lobby {
     client.state.spriteIndex = spriteIndex || 0;
     client.state.name = name || 'Anonymous';
     room.add(client);
+
+    this.broadcastRoomList();
+  }
+
+  getRoomList() {
+    const list = [];
+    for (const [id, room] of this.rooms) {
+      // Only show rooms that have players, or 'default'
+      if (room.clients.size > 0 || id === 'default') {
+        list.push({ id, count: room.clients.size });
+      }
+    }
+    return list;
+  }
+
+  broadcastRoomList() {
+    const rooms = this.getRoomList();
+    for (const client of this.clients.values()) {
+      client.send(MSG.ROOM_LIST, { rooms });
+    }
   }
 }
