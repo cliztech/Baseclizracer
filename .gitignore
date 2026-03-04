@@ -1,2 +1,6 @@
 node_modules/
 verification/
+artifacts/
+cache/
+verification/
+node_modules/
