@@ -25,6 +25,8 @@ export function deserializePlayerState(payload) {
     x: Number(packet.x) || 0,
     z: Number(packet.z) || 0,
     speed: Number(packet.speed) || 0,
+    carSkin: (typeof packet.carSkin === 'string') ? packet.carSkin : DEFAULT_COSMETICS.carSkin,
+    color: (typeof packet.color === 'string') ? packet.color : DEFAULT_COSMETICS.color
     carSkin: packet.carSkin || DEFAULT_COSMETICS.carSkin,
     color: packet.color || DEFAULT_COSMETICS.color
   };
@@ -35,6 +37,8 @@ export function createSocket(url, onMessage) {
   const queue = [];
 
   ws.addEventListener('message', ev => {
+    const data = safeParse(ev.data);
+    if (data && onMessage) onMessage(data);
     try {
       const envelope = JSON.parse(ev.data);
       if (onMessage) onMessage(envelope);

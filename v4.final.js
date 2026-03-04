@@ -101,6 +101,9 @@ const net = createSocket("ws://localhost:8080", data => {
   if (!parsed || !parsed.id || parsed.id === localPlayerId)
     return;
   parsed.x = Util.limit(parsed.x || 0, -3, 3);
+  parsed.z = (Number(parsed.z) || 0) % (trackLength || 1000000);
+  remotePlayers.set(parsed.id, parsed);
+});
   parsed.z = parsed.z || 0;
   remotePlayers.set(parsed.id, parsed);
 });
@@ -864,6 +867,77 @@ const net = createSocket("ws://localhost:8080", data => {
         playerSpriteSheets[skinId] = tintSpriteSheet(baseSpritesheet, paletteSwapTable[skinId]);
       }
     }
+
+    function getPlayerSpriteSheet(skinId, color) {
+  const cacheKey = color ? (skinId + "-" + color) : skinId;
+  if (playerSpriteSheets[cacheKey])
+    return playerSpriteSheets[cacheKey];
+  if (playerSpriteSheets[skinId])
+    return playerSpriteSheets[skinId];
+  if (color) {
+    playerSpriteSheets[cacheKey] = tintSpriteSheet(sprites, buildPaletteSwapTable(BASE_CAR_PALETTE, { custom: { palette: buildPaletteFromColor(color) } }).custom);
+    return playerSpriteSheets[cacheKey];
+  }
+  return playerSpriteSheets.default || sprites;
+}
+
+    function tintSpriteSheet(baseSpritesheet, swapTable) {
+      var canvasElement = document.createElement('canvas');
+      canvasElement.width = baseSpritesheet.width;
+      canvasElement.height = baseSpritesheet.height;
+      var tintCtx = canvasElement.getContext('2d');
+      tintCtx.drawImage(baseSpritesheet, 0, 0);
+      for (var i = 0; i < playerSpriteTargets.length; i++) {
+        var sprite = playerSpriteTargets[i];
+        var region = tintCtx.getImageData(sprite.x, sprite.y, sprite.w, sprite.h);
+        var swapped = applyPaletteSwap(region, swapTable);
+        tintCtx.putImageData(swapped, sprite.x, sprite.y);
+      }
+      return canvasElement;
+    }
+
+    function collectRemotePlayers() {
+      var results = [];
+      remotePlayers.forEach(function(player) {
+        var worldZ = Util.increase(player.z || 0, 0, trackLength);
+        var segmentIndex = Math.floor(worldZ/segmentLength) % segments.length;
+        results.push({
+          segmentIndex: segmentIndex,
+          percent: Util.percentRemaining(worldZ, segmentLength),
+          x: player.x,
+          speed: player.speed,
+          carSkin: player.carSkin,
+          color: player.color
+        });
+      });
+      return results;
+    }
+
+    function renderRemotePlayers(context, segment, remoteSprites) {
+      for (var i = 0; i < remoteSprites.length; i++) {
+        var driver = remoteSprites[i];
+        if (driver.segmentIndex !== segment.index)
+          continue;
+        var spriteScale = Util.interpolate(segment.p1.screen.scale, segment.p2.screen.scale, driver.percent);
+        var spriteX = Util.interpolate(segment.p1.screen.x, segment.p2.screen.x, driver.percent) + (spriteScale * driver.x * roadWidth * width/2);
+        var spriteY = Util.interpolate(segment.p1.screen.y, segment.p2.screen.y, driver.percent);
+        Render.player(context, width, height, resolution, roadWidth, getPlayerSpriteSheet(driver.carSkin, driver.color), driver.speed/maxSpeed,
+                      spriteScale,
+                      spriteX,
+                      spriteY,
+                      driver.x < 0 ? -1 : driver.x > 0 ? 1 : 0,
+                      segment.p2.world.y - segment.p1.world.y);
+      }
+    }
+
+    function applyHudAccent(color) {
+      document.documentElement.style.setProperty('--hud-accent', color);
+      if (hudIcons.minimap)
+        hudIcons.minimap.style.backgroundColor = color;
+      if (hudIcons.badge)
+        hudIcons.badge.style.backgroundColor = color;
+    }
+
 
     function getPlayerSpriteSheet(skinId, color) {
       var cacheKey = color ? (skinId + "-" + color) : skinId;
