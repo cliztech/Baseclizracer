@@ -21,6 +21,9 @@ export class RemotePlayer {
     // Rendering helpers
     this.offset = 0;
     this.percent = 0;
+
+    // Tweakable physics
+    this.smoothing = 10;
   }
 
   /**
@@ -39,7 +42,7 @@ export class RemotePlayer {
    * @param {number} trackLength - Total length of the track for wrapping
    */
   update(dt, trackLength) {
-    const smoothing = 10 * dt; // Converge in ~100ms (1/10th sec)
+    const smoothing = this.smoothing * dt; // Uses dynamic smoothing factor
 
     // 1. Interpolate lateral position and speed
     this.x = Util.interpolate(this.x, this.target.x, smoothing);
