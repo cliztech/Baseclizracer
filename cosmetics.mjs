@@ -49,7 +49,7 @@ export const CAR_SKINS = {
 };
 
 export function hexToRgb(hex) {
-  const normalized = hex.replace('#', '');
+  const normalized = String(hex || '').replace('#', '');
   const bigint = parseInt(normalized, 16);
   return {
     r: (bigint >> 16) & 255,

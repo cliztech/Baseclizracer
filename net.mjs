@@ -27,20 +27,50 @@ export function deserializePlayerState(payload) {
     speed: Number(packet.speed) || 0,
     carSkin: (typeof packet.carSkin === 'string') ? packet.carSkin : DEFAULT_COSMETICS.carSkin,
     color: (typeof packet.color === 'string') ? packet.color : DEFAULT_COSMETICS.color
+    carSkin: packet.carSkin || DEFAULT_COSMETICS.carSkin,
+    color: packet.color || DEFAULT_COSMETICS.color
   };
 }
 
 export function createSocket(url, onMessage) {
   const ws = new WebSocket(url);
+  const queue = [];
+
   ws.addEventListener('message', ev => {
     const data = safeParse(ev.data);
     if (data && onMessage) onMessage(data);
+    try {
+      const envelope = JSON.parse(ev.data);
+      if (onMessage) onMessage(envelope);
+    } catch {
+      // ignore malformed packets
+    }
   });
+
+  ws.addEventListener('open', () => {
+    while (queue.length > 0) {
+      ws.send(queue.shift());
+    }
+  });
+
   return {
-    send(data) {
+    send(type, data = {}) {
+      let payload;
+
+      // If data is already an object, merge it. Otherwise, treat as payload.
+      // Legacy support: if type is object, treat as old send(data)
+      if (typeof type === 'object') {
+        payload = JSON.stringify(type);
+      } else {
+        payload = JSON.stringify({ type, ...data });
+      }
+
       if (ws.readyState === WebSocket.OPEN) {
         const payload = typeof data === 'string' ? data : JSON.stringify(data);
         ws.send(payload);
+        ws.send(payload);
+      } else {
+        queue.push(payload);
       }
     }
   };
