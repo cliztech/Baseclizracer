@@ -861,6 +861,7 @@ const net = createSocket("ws://localhost:8080", data => {
       cameraDepth            = 1 / Math.tan((fieldOfView/2) * Math.PI/180);
       playerZ                = (cameraHeight * cameraDepth);
       resolution             = height/480;
+      refreshTweakUI({ lanes, roadWidth, cameraHeight, drawDistance, fieldOfView, fogDensity });
 
       lapCount = 0;
       totalTime = 0;
@@ -882,6 +883,7 @@ const net = createSocket("ws://localhost:8080", data => {
 
     //=========================================================================
 
+setupTweakUI(reset);
     function buildPlayerSpriteSheets(baseSpritesheet) {
       playerSpriteSheets = {};
       playerSpriteSheets.default = baseSpritesheet;

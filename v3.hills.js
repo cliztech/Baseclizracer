@@ -296,4 +296,5 @@ import { setupTweakUI, refreshTweakUI } from "./tweak-ui.mjs";
         resetRoad(); // only rebuild road when necessary
     }
 
+setupTweakUI(reset);
 setupTweakUI({ reset: reset });
