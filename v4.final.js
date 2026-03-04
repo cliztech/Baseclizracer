@@ -1,4 +1,7 @@
 import { setupTweakUI, refreshTweakUI } from "./tweak-ui.mjs";
+import { BASE_CAR_PALETTE, CAR_SKINS, applyPaletteSwap, buildPaletteSwapTable } from "./cosmetics.mjs";
+import { DEFAULT_COSMETICS, createSocket, deserializePlayerState, serializePlayerState } from "./net.mjs";
+    var fps            = 60;                      // how many 'update' frames per second
 import { NetworkManager } from "./network-manager.mjs";
 import { Rival } from './rival.mjs';
 import { Dom } from './dom.mjs';
@@ -71,6 +74,36 @@ import { KEY, COLORS, BACKGROUND, SPRITES, GAME_CONFIG, RACE_STATE } from './con
       latency:          { value: null, dom: Dom.get('latency_value')          }
     }
 
+    var hudIcons = {
+      minimap: Dom.get('hud_minimap_icon'),
+      badge: Dom.get('hud_nameplate_badge')
+    }
+
+const paletteSwapTable = buildPaletteSwapTable(BASE_CAR_PALETTE, CAR_SKINS);
+const playerSpriteTargets = [
+  SPRITES.PLAYER_LEFT,
+  SPRITES.PLAYER_RIGHT,
+  SPRITES.PLAYER_STRAIGHT,
+  SPRITES.PLAYER_UPHILL_LEFT,
+  SPRITES.PLAYER_UPHILL_RIGHT,
+  SPRITES.PLAYER_UPHILL_STRAIGHT
+];
+const localPlayerId = (crypto.randomUUID && crypto.randomUUID()) || ("player-" + Math.random().toString(16).slice(2));
+const remotePlayers = new Map();
+var playerSpriteSheets = {};
+var localCosmetics = {
+  carSkin: DEFAULT_COSMETICS.carSkin,
+  color: (CAR_SKINS[DEFAULT_COSMETICS.carSkin] && CAR_SKINS[DEFAULT_COSMETICS.carSkin].hudColor) || DEFAULT_COSMETICS.color
+};
+
+const net = createSocket("ws://localhost:8080", data => {
+  var parsed = deserializePlayerState(data);
+  if (!parsed || !parsed.id || parsed.id === localPlayerId)
+    return;
+  parsed.x = Util.limit(parsed.x || 0, -3, 3);
+  parsed.z = parsed.z || 0;
+  remotePlayers.set(parsed.id, parsed);
+});
     var networkManager = new NetworkManager({
       onRoomList: renderRoomList,
       onPlayerJoin: (id, p) => console.log(`Player joined: ${p.name}`),
@@ -320,6 +353,7 @@ import { KEY, COLORS, BACKGROUND, SPRITES, GAME_CONFIG, RACE_STATE } from './con
 
       updateHud('speed',            5 * Math.round(speed/500));
       updateHud('current_lap_time', formatTime(currentLapTime));
+      net.send(serializePlayerState({ id: localPlayerId, x: playerX, z: position, speed, carSkin: localCosmetics.carSkin, color: localCosmetics.color }));
       updateHud('latency',          networkManager.latency);
 
       networkManager.broadcastUpdate(dt, { x: playerX, z: position, speed });
@@ -377,6 +411,7 @@ import { KEY, COLORS, BACKGROUND, SPRITES, GAME_CONFIG, RACE_STATE } from './con
       var playerPercent = Util.percentRemaining(position+playerZ, segmentLength);
       var playerY       = Util.interpolate(playerSegment.p1.world.y, playerSegment.p2.world.y, playerPercent);
       var maxy          = height;
+      var playerSpriteSheet = getPlayerSpriteSheet(localCosmetics.carSkin, localCosmetics.color);
 
       var x  = 0;
       var dx = - (baseSegment.curve * basePercent);
@@ -388,6 +423,7 @@ import { KEY, COLORS, BACKGROUND, SPRITES, GAME_CONFIG, RACE_STATE } from './con
       Render.background(ctx, background, width, height, BACKGROUND.TREES, treeOffset, resolution * treeSpeed * playerY);
 
       var n, i, segment, car, sprite, spriteScale, spriteX, spriteY;
+      var remoteSprites = collectRemotePlayers();
 
       for(n = 0 ; n < drawDistance ; n++) {
 
@@ -462,8 +498,10 @@ import { KEY, COLORS, BACKGROUND, SPRITES, GAME_CONFIG, RACE_STATE } from './con
           Render.sprite(ctx, width, height, resolution, roadWidth, sprites, sprite.source, spriteScale, spriteX, spriteY, (sprite.offset < 0 ? -1 : 0), -1, segment.clip);
         }
 
+        renderRemotePlayers(ctx, segment, remoteSprites);
+
         if (segment == playerSegment) {
-          Render.player(ctx, width, height, resolution, roadWidth, sprites, speed/maxSpeed,
+          Render.player(ctx, width, height, resolution, roadWidth, playerSpriteSheet, speed/maxSpeed,
                         cameraDepth/playerZ,
                         width/2,
                         (height/2) - (cameraDepth/playerZ * Util.interpolate(playerSegment.p1.camera.y, playerSegment.p2.camera.y, playerPercent) * height/2),
@@ -764,9 +802,11 @@ import { KEY, COLORS, BACKGROUND, SPRITES, GAME_CONFIG, RACE_STATE } from './con
       ready: function(images) {
         background = images[0];
         sprites    = images[1];
+        buildPlayerSpriteSheets(sprites);
         reset();
         Dom.storage.fast_lap_time = Dom.storage.fast_lap_time || 180;
         updateHud('fast_lap_time', formatTime(Util.toFloat(Dom.storage.fast_lap_time)));
+        applyHudAccent(localCosmetics.color);
         Dom.hide('loading');
       }
     });
@@ -817,5 +857,93 @@ import { KEY, COLORS, BACKGROUND, SPRITES, GAME_CONFIG, RACE_STATE } from './con
 
     //=========================================================================
 
+    function buildPlayerSpriteSheets(baseSpritesheet) {
+      playerSpriteSheets = {};
+      playerSpriteSheets.default = baseSpritesheet;
+      for (var skinId in paletteSwapTable) {
+        playerSpriteSheets[skinId] = tintSpriteSheet(baseSpritesheet, paletteSwapTable[skinId]);
+      }
+    }
+
+    function getPlayerSpriteSheet(skinId, color) {
+      var cacheKey = color ? (skinId + "-" + color) : skinId;
+      if (playerSpriteSheets[cacheKey])
+        return playerSpriteSheets[cacheKey];
+      if (Object.prototype.hasOwnProperty.call(playerSpriteSheets, skinId))
+        return playerSpriteSheets[skinId];
+      if (color) {
+        playerSpriteSheets[cacheKey] = tintSpriteSheet(sprites, buildPaletteSwapTable(BASE_CAR_PALETTE, { custom: { palette: buildPaletteFromColor(color) } }).custom);
+        return playerSpriteSheets[cacheKey];
+      }
+      return playerSpriteSheets.default || sprites;
+    }
+
+    function tintSpriteSheet(baseSpritesheet, swapTable) {
+      var canvasElement = document.createElement('canvas');
+      canvasElement.width = baseSpritesheet.width;
+      canvasElement.height = baseSpritesheet.height;
+      var tintCtx = canvasElement.getContext('2d');
+      tintCtx.drawImage(baseSpritesheet, 0, 0);
+      for (var i = 0; i < playerSpriteTargets.length; i++) {
+        var sprite = playerSpriteTargets[i];
+        var region = tintCtx.getImageData(sprite.x, sprite.y, sprite.w, sprite.h);
+        var swapped = applyPaletteSwap(region, swapTable);
+        tintCtx.putImageData(swapped, sprite.x, sprite.y);
+      }
+      return canvasElement;
+    }
 setupTweakUI({ reset: reset });
 
+    function collectRemotePlayers() {
+      var results = [];
+      remotePlayers.forEach(function(player) {
+        var worldZ = (player.z || 0) % (trackLength || 1);
+        if (worldZ < 0) worldZ += (trackLength || 1);
+        var segmentIndex = Math.floor(worldZ/segmentLength) % segments.length;
+        results.push({
+          segmentIndex: segmentIndex,
+          percent: Util.percentRemaining(worldZ, segmentLength),
+          x: player.x,
+          speed: player.speed,
+          carSkin: player.carSkin,
+          color: player.color
+        });
+      });
+      return results;
+    }
+
+    function renderRemotePlayers(context, segment, remoteSprites) {
+      for (var i = 0; i < remoteSprites.length; i++) {
+        var driver = remoteSprites[i];
+        if (driver.segmentIndex !== segment.index)
+          continue;
+        var spriteScale = Util.interpolate(segment.p1.screen.scale, segment.p2.screen.scale, driver.percent);
+        var spriteX = Util.interpolate(segment.p1.screen.x, segment.p2.screen.x, driver.percent) + (spriteScale * driver.x * roadWidth * width/2);
+        var spriteY = Util.interpolate(segment.p1.screen.y, segment.p2.screen.y, driver.percent);
+        Render.player(context, width, height, resolution, roadWidth, getPlayerSpriteSheet(driver.carSkin, driver.color), driver.speed/maxSpeed,
+                      spriteScale,
+                      spriteX,
+                      spriteY,
+                      driver.x < 0 ? -1 : driver.x > 0 ? 1 : 0,
+                      segment.p2.world.y - segment.p1.world.y);
+      }
+    }
+
+    function applyHudAccent(color) {
+      document.documentElement.style.setProperty('--hud-accent', color);
+      if (hudIcons.minimap)
+        hudIcons.minimap.style.backgroundColor = color;
+      if (hudIcons.badge)
+        hudIcons.badge.style.backgroundColor = color;
+    }
+
+    function buildPaletteFromColor(primaryColor) {
+      return {
+        body: primaryColor,
+        shadow: BASE_CAR_PALETTE.shadow,
+        trim: BASE_CAR_PALETTE.trim,
+        decal: BASE_CAR_PALETTE.decal
+      };
+    }
+
+setupTweakUI();
