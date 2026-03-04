@@ -6,9 +6,9 @@
 - [x] Refactor `v1.straight.js`, `v2.curves.js`, `v3.hills.js` to ES modules
 - [x] Remove `common.js` and global pollution
 - [x] Setup Visionary Architect `.context` structure
+- [x] Networking Core (Lobby/Room support) - *Buffered Client & Explicit Join Protocol*
 
 ## In Progress
-- [ ] Networking Core (Lobby/Room support)
 - [ ] Gameplay Depth (AI Rivals, Collision)
 
 ## Blocked
