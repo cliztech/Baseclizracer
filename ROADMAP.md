@@ -32,7 +32,7 @@ This plan outlines the next development milestones to evolve Base Racers into a 
 - Provide **npm scripts** for dev (`npm start`), multiplayer dev server (`npm run dev:net`), and tests (`npm test`).
 
 ## Asset Pipeline
-- Set up **Aseprite + TexturePacker** (or free alternatives) for sprite atlas generation; commit source `.ase` files.
+- Set up **sprite atlas tooling** (e.g., TexturePacker or free alternatives) for sprite atlas generation; commit source art files.
 - Define **sprite slicing metadata** compatible with existing `sprites.js`; add preview thumbnails to `/images`.
 - Implement **resolution scaling** (low-res canvas scaled up with `image-rendering: pixelated`) to keep crisp edges.
 
