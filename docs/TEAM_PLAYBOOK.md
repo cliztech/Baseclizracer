@@ -23,7 +23,7 @@ This playbook defines the skills, knowledge, leadership structure, technology ch
 
 ## 3) Core Skills and Knowledge Base
 - **Engineering**: JavaScript/TypeScript, Phaser/Canvas/WebGL, WebSocket and WebRTC patterns, server-authoritative multiplayer, deterministic/lockstep vs. client-prediction models, cryptography basics, security (XSS/CSRF, replay protection), build tooling (Vite/Webpack), CI/CD (GitHub Actions), containerization.
-- **Art**: pixel-art workflow (Aseprite/Piskel), palette discipline, sprite sheet packing, VFX timing, UI/UX for low-res displays, accessibility contrast guidelines.
+- **Art**: pixel-art workflow (Piskel or similar), palette discipline, sprite sheet packing, VFX timing, UI/UX for low-res displays, accessibility contrast guidelines.
 - **Audio**: looped track design, dynamic mixing, audio budget for web, latency minimization.
 - **Product/Design**: free-to-play ethics, progression balancing, economy design (if web3), retention/engagement metrics, live-ops cadence.
 - **QA/Performance**: profiling (FPS, memory, GC), network simulation, automated regression, cross-browser/device matrices.
