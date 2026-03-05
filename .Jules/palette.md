@@ -1,3 +1,6 @@
+## 2024-05-23 - Replaced Span with Button for Accessibility
+**Learning:** The `Dom` helper in `common.js` binds events by ID, which is great for refactoring. It allowed me to swap a `<span>` for a `<button>` without breaking the JavaScript event binding.
+**Action:** When refactoring legacy code, check if event listeners are bound by ID. If so, tag replacement is safe as long as ID is preserved and default styles (border/padding) are reset.
 ## 2026-01-04 - Replacing CSS-Sprite Spans with Semantic Buttons
 **Learning:** Converting interactive `<span>` elements using CSS sprites to `<button>` requires explicit CSS resets (`border: 0; padding: 0; appearance: none;`) to maintain visual fidelity while gaining keyboard accessibility and screen reader support.
 **Action:** When refactoring for accessibility, always pair semantic HTML updates with CSS resets and explicit focus styles to ensure a seamless visual transition.
