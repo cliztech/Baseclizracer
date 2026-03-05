@@ -1,3 +1,6 @@
+## 2024-05-23 - Semantic Controls
+**Learning:** Replacing `<span>` controls with `<button>` elements immediately enables keyboard accessibility (Tab, Enter/Space) and screen reader support without complex JavaScript polyfills.
+**Action:** Always inspect custom UI controls (icons, toggles) to see if they are semantic buttons. If not, refactor to `<button>` and reset CSS styles (border, background, padding) to maintain visual design while gaining native accessibility.
 ## 2024-05-23 - Replaced Span with Button for Accessibility
 **Learning:** The `Dom` helper in `common.js` binds events by ID, which is great for refactoring. It allowed me to swap a `<span>` for a `<button>` without breaking the JavaScript event binding.
 **Action:** When refactoring legacy code, check if event listeners are bound by ID. If so, tag replacement is safe as long as ID is preserved and default styles (border/padding) are reset.
